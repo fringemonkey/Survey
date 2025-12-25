@@ -12,11 +12,11 @@ function GovernmentBanner() {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             {/* Official COCS Logo */}
             <div className="flex-shrink-0">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/10 backdrop-blur-sm border-4 border-white/20 flex items-center justify-center p-2">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/10 backdrop-blur-sm border-4 border-white/20 overflow-hidden flex items-center justify-center">
                 <img 
                   src="/cocs-logo.png" 
                   alt="COCS Logo" 
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover scale-110"
                 />
               </div>
             </div>
