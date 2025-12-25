@@ -1,20 +1,22 @@
-import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import HomePage from './components/HomePage'
+import MethodologyPage from './components/MethodologyPage'
 import LandingPage from './components/LandingPage'
 import SurveyForm from './components/SurveyForm'
 
 function App() {
-  const [showSurvey, setShowSurvey] = useState(false)
-
   return (
-    <div className="min-h-screen bg-notion-bg text-notion-text">
-      {!showSurvey ? (
-        <LandingPage onStartSurvey={() => setShowSurvey(true)} />
-      ) : (
-        <SurveyForm onBack={() => setShowSurvey(false)} />
-      )}
-    </div>
+    <Router>
+      <div className="min-h-screen bg-notion-bg text-notion-text">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/methodology" element={<MethodologyPage />} />
+          <Route path="/survey" element={<LandingPage />} />
+          <Route path="/survey/form" element={<SurveyForm />} />
+        </Routes>
+      </div>
+    </Router>
   )
 }
 
 export default App
-
