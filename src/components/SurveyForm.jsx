@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import FormField from './FormField'
+import SearchableDropdown from './SearchableDropdown'
 import Footer from './Footer'
 import { submitSurvey } from '../services/api'
+import { CPU_OPTIONS, GPU_OPTIONS, RAM_OPTIONS, STORAGE_OPTIONS } from '../data/hardwareOptions'
 
 const COMMON_BUGS = [
   'Boat Stuck',
@@ -28,9 +30,12 @@ function SurveyForm() {
     discordName: '',
     age: '',
     cpu: '',
+    cpuOther: '',
     gpu: '',
+    gpuOther: '',
     playtime: '',
     ram: '',
+    storage: '',
     tos: false,
     
     // Step 2: Performance and Stability
@@ -93,6 +98,9 @@ function SurveyForm() {
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
+      // Clear "Other" field when a non-Other option is selected
+      ...(name === 'cpu' && value !== 'Other' ? { cpuOther: '' } : {}),
+      ...(name === 'gpu' && value !== 'Other' ? { gpuOther: '' } : {}),
     }))
     // Clear error when user starts typing
     if (errors[name]) {
@@ -176,7 +184,14 @@ function SurveyForm() {
     setSubmitStatus(null)
     
     try {
-      await submitSurvey(formData)
+      // Transform data: use custom value if "Other" is selected
+      const submissionData = {
+        ...formData,
+        cpu: formData.cpu === 'Other' && formData.cpuOther ? formData.cpuOther : formData.cpu,
+        gpu: formData.gpu === 'Other' && formData.gpuOther ? formData.gpuOther : formData.gpu,
+      }
+      
+      await submitSurvey(submissionData)
       setSubmitStatus('success')
     } catch (error) {
       console.error('Submission error:', error)
@@ -204,9 +219,12 @@ function SurveyForm() {
                 discordName: '',
                 age: '',
                 cpu: '',
+                cpuOther: '',
                 gpu: '',
+                gpuOther: '',
                 playtime: '',
                 ram: '',
+                storage: '',
                 tos: false,
                 avgFpsPreCu1: '',
                 avgFpsPostCu1: '',
@@ -323,22 +341,28 @@ function SurveyForm() {
               min="16"
             />
             
-            <FormField
+            <SearchableDropdown
               label="CPU"
               name="cpu"
-              type="text"
               value={formData.cpu}
               onChange={handleChange}
-              placeholder="e.g., AMD Ryzen 7 5800X"
+              onOtherChange={handleChange}
+              placeholder="Search for your CPU..."
+              options={CPU_OPTIONS}
+              otherValue={formData.cpuOther}
+              otherPlaceholder="Specify your CPU model..."
             />
             
-            <FormField
+            <SearchableDropdown
               label="GPU"
               name="gpu"
-              type="text"
               value={formData.gpu}
               onChange={handleChange}
-              placeholder="e.g., NVIDIA RTX 3080"
+              onOtherChange={handleChange}
+              placeholder="Search for your GPU..."
+              options={GPU_OPTIONS}
+              otherValue={formData.gpuOther}
+              otherPlaceholder="Specify your GPU model..."
             />
             
             <FormField
@@ -354,10 +378,21 @@ function SurveyForm() {
             <FormField
               label="RAM"
               name="ram"
-              type="text"
+              type="select"
               value={formData.ram}
               onChange={handleChange}
-              placeholder="e.g., 16GB, 32GB"
+              placeholder="Select RAM size..."
+              options={RAM_OPTIONS}
+            />
+            
+            <FormField
+              label="Storage"
+              name="storage"
+              type="select"
+              value={formData.storage}
+              onChange={handleChange}
+              placeholder="Select storage type..."
+              options={STORAGE_OPTIONS}
             />
             
             <div className="mb-6">

@@ -30,7 +30,15 @@ function Footer() {
             </a>
           </div>
           <div className="text-xs text-notion-text-secondary/70">
-            Not affiliated with Channel 37
+            Fan community project • Not affiliated with{' '}
+            <a
+              href="https://www.channel37.co/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-notion-accent transition-colors"
+            >
+              Channel37
+            </a>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React from 'react'
+import SearchableDropdown from './SearchableDropdown'
 
 function FormField({
   label,
@@ -6,12 +7,16 @@ function FormField({
   type = 'text',
   value,
   onChange,
+  onOtherChange,
   error,
   placeholder,
   required = false,
   rows,
   options = [],
   className = '',
+  searchable = false,
+  otherValue = '',
+  otherPlaceholder = '',
 }) {
   const baseClasses = `
     w-full px-4 py-2 bg-notion-bg-secondary border border-notion-bg-tertiary 
@@ -21,6 +26,26 @@ function FormField({
     ${error ? 'border-red-500 focus:ring-red-500' : ''}
     ${className}
   `.trim().replace(/\s+/g, ' ')
+
+  // Use SearchableDropdown if searchable prop is true and options are provided
+  if (searchable && type === 'select' && Array.isArray(options) && options.length > 0) {
+    return (
+      <SearchableDropdown
+        label={label}
+        name={name}
+        value={value}
+        onChange={onChange}
+        onOtherChange={onOtherChange}
+        error={error}
+        placeholder={placeholder}
+        required={required}
+        options={options}
+        className={className}
+        otherValue={otherValue}
+        otherPlaceholder={otherPlaceholder}
+      />
+    )
+  }
 
   return (
     <div className="mb-6">
