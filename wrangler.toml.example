@@ -1,0 +1,15 @@
+name = "tlc-survey"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tlc-survey-db"
+database_id = "" # Get this from: wrangler d1 create tlc-survey-db
+
+[env.production]
+  [[env.production.d1_databases]]
+  binding = "DB"
+  database_name = "tlc-survey-db"
+  database_id = "" # Set this for production after creating production database
+
