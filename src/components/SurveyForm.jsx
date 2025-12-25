@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import FormField from './FormField'
+import Footer from './Footer'
 import { submitSurvey } from '../services/api'
 
 const COMMON_BUGS = [
@@ -881,6 +882,7 @@ function SurveyForm() {
           </div>
         )}
       </form>
+      <Footer />
     </div>
   )
 }

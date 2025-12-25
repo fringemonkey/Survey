@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import Callout from './Callout'
+import Footer from './Footer'
 
 function HomePage() {
   return (
@@ -147,6 +148,7 @@ function HomePage() {
           <p className="text-notion-text-secondary mt-6 text-sm">Thank you for supporting the community.</p>
         </section>
       </div>
+      <Footer />
     </div>
   )
 }

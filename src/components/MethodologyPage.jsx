@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import Footer from './Footer'
 
 function MethodologyPage() {
   return (
@@ -247,6 +248,35 @@ function MethodologyPage() {
           </p>
         </section>
 
+        <section className="my-8">
+          <h3 className="text-2xl font-bold mb-4">Source code and transparency</h3>
+          <p className="text-notion-text-secondary leading-relaxed mb-4">
+            This survey is implemented using a small, custom, open-source codebase.
+          </p>
+          <p className="text-notion-text-secondary leading-relaxed mb-4">
+            The source repository is publicly available for anyone who is interested in:
+          </p>
+          <ul className="list-disc list-inside text-notion-text-secondary space-y-2 ml-4 mb-4">
+            <li>Reviewing how data is collected and stored</li>
+            <li>Verifying that no additional tracking or data collection occurs</li>
+            <li>Understanding how edits and deduplication are handled</li>
+          </ul>
+          <p className="text-notion-text-secondary leading-relaxed mb-4">
+            Reviewing the code is <strong>not required</strong> to participate in the survey.
+          </p>
+          <p className="text-notion-text-secondary leading-relaxed">
+            <strong>Repository:</strong>{' '}
+            <a 
+              href="https://github.com/fringemonkey/Survey" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-notion-accent hover:underline"
+            >
+              https://github.com/fringemonkey/Survey
+            </a>
+          </p>
+        </section>
+
         <div className="mt-12 pt-8 border-t border-notion-bg-tertiary">
           <Link
             to="/survey"
@@ -256,6 +286,7 @@ function MethodologyPage() {
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

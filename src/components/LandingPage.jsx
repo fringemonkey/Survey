@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import Callout from './Callout'
 import CollapsibleSection from './CollapsibleSection'
+import Footer from './Footer'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -87,8 +88,9 @@ function LandingPage() {
           <Callout icon="💡" className="mt-4 bg-notion-bg-tertiary">
             If the survey gets abused in anyway that violates Notion's policies or the rules of common decency it will be removed and the data deleted. Let's all be adults please.
           </Callout>
-        </Callout>
+          </Callout>
       </div>
+      <Footer />
     </div>
   )
 }
