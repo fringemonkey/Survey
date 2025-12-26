@@ -17,13 +17,14 @@ CREATE TABLE IF NOT EXISTS survey_responses_new (
   
   -- Respondent Info (Required)
   discord_name TEXT, -- Optional, no longer collected
-  age INTEGER NOT NULL,
+  age INTEGER, -- Made nullable in later migration
   cpu TEXT,
   gpu TEXT,
   playtime INTEGER, -- hours
   ram TEXT,
   tos INTEGER NOT NULL DEFAULT 0, -- checkbox: 0 = No, 1 = Yes
   response_id TEXT UNIQUE, -- Generated: TLC-CU1-{id}
+  storage TEXT,
   
   -- Performance and Stability (Required)
   avg_fps_pre_cu1 INTEGER,
@@ -91,7 +92,7 @@ CREATE TABLE IF NOT EXISTS survey_responses_new (
 -- Copy data from old table to new table (if old table exists)
 -- Explicitly list columns that exist in the original schema (without storage, which is added in 0003)
 INSERT INTO survey_responses_new (
-  id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id,
+  id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id, storage,
   avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
   common_bugs_experienced, crashes_per_session, quest_bugs_experienced, which_quest_poi,
   posted_about_issues_boat1, method_used_to_resolve_boat1, was_it_resolved_boat1, link_to_post_boat1,
@@ -106,6 +107,7 @@ INSERT INTO survey_responses_new (
 )
 SELECT 
   id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id,
+  NULL as storage, -- Storage column added here for future use
   avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
   common_bugs_experienced, crashes_per_session, quest_bugs_experienced, which_quest_poi,
   posted_about_issues_boat1, method_used_to_resolve_boat1, was_it_resolved_boat1, link_to_post_boat1,

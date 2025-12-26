@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS survey_responses_new (
 
 -- Copy data from old table to new table
 -- Convert existing INTEGER playtime values to TEXT (cast to string)
+-- Note: storage column may not exist in old table, so we'll set it to NULL
 INSERT INTO survey_responses_new 
 SELECT 
   id,
@@ -94,7 +95,7 @@ SELECT
   ram,
   tos,
   response_id,
-  storage,
+  NULL as storage, -- Storage may not exist in old table, set to NULL
   avg_fps_pre_cu1,
   avg_fps_post_cu1,
   pre_cu1_vs_post,
