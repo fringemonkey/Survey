@@ -71,7 +71,7 @@ function MethodologyPage() {
             </p>
             <ul className="list-disc list-inside text-notion-text-secondary space-y-2 ml-4 mb-4">
               <li>Common bugs and stability issues</li>
-              <li>Performance changes before vs after CU1</li>
+              <li>Performance changes before vs after Last Humans</li>
               <li>Correlations between hardware and reported issues</li>
               <li>Trends across the player base</li>
             </ul>

@@ -175,7 +175,7 @@ function PerformanceSurvey() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-2">
               <label htmlFor="avgFpsPreCu1" className="block font-medium text-notion-text">
-                Average FPS before CU1
+                Average FPS before Last Humans
               </label>
               <div className="group relative">
                 <svg 
@@ -205,7 +205,7 @@ function PerformanceSurvey() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-2">
               <label htmlFor="avgFpsPostCu1" className="block font-medium text-notion-text">
-                Average FPS after CU1
+                Average FPS after Last Humans
               </label>
               <div className="group relative">
                 <svg 

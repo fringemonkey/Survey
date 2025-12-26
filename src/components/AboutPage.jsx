@@ -27,7 +27,7 @@ function AboutPage() {
         <section className="my-8">
           <h3 className="text-2xl font-bold mb-4">Community-Driven Initiative</h3>
           <p className="text-notion-text-secondary leading-relaxed mb-4">
-            This survey is a <strong>community-run project</strong> created by players of <em>The Last Caretaker</em> to better understand how the CU1 update is performing across different systems and player experiences.
+            This survey is a <strong>community-run project</strong> created by players of <em>The Last Caretaker</em> to better understand how the Last Humans update is performing across different systems and player experiences.
           </p>
           <p className="text-notion-text-secondary leading-relaxed">
             It is not created, requested, endorsed, or managed by the developers of <em>The Last Caretaker</em>.

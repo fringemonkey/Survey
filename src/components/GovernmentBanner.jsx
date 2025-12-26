@@ -34,7 +34,7 @@ function GovernmentBanner() {
                 <span className="text-orange-400">CARETAKER</span>
               </h1>
               <p className="text-sm md:text-base text-slate-300 font-medium">
-                CU1 Update Performance & Stability Assessment
+                Last Humans Update Performance & Stability Assessment
               </p>
             </div>
           </div>

@@ -12,12 +12,12 @@ function HomePage() {
 
       {/* Main Content */}
       <div className="notion-content py-12">
-        <h2 className="text-4xl font-bold mb-8">The Last Caretaker – Community Performance Survey (CU1)</h2>
+        <h2 className="text-4xl font-bold mb-8">The Last Caretaker – Community Performance Survey (Last Humans)</h2>
 
         <section className="my-8">
           <h3 className="text-2xl font-bold mb-4">Why this survey exists</h3>
           <p className="text-notion-text-secondary leading-relaxed mb-4">
-            This is a <strong>community-run survey</strong> created by players of <em>The Last Caretaker</em> to better understand how the <strong>CU1 update</strong> is performing across different systems and player experiences.
+            This is a <strong>community-run survey</strong> created by players of <em>The Last Caretaker</em> to better understand how the <strong>Last Humans update</strong> is performing across different systems and player experiences.
           </p>
           <p className="text-notion-text-secondary leading-relaxed mb-4">
             After major updates, feedback often becomes fragmented across Discord threads, Steam discussions, and individual bug reports. Important details get repeated, lost, or buried. This survey exists to:
@@ -54,7 +54,7 @@ function HomePage() {
           </p>
           <ul className="list-disc list-inside text-notion-text-secondary space-y-2 ml-4 mb-4">
             <li>Active players of <em>The Last Caretaker</em></li>
-            <li>Players who experienced performance or stability changes after CU1</li>
+            <li>Players who experienced performance or stability changes after Last Humans</li>
             <li>Players who encountered bugs or gameplay issues</li>
             <li>Community members interested in improving shared understanding</li>
           </ul>
@@ -67,9 +67,9 @@ function HomePage() {
           <p className="text-notion-text-secondary leading-relaxed mb-4">The survey collects:</p>
           <ul className="list-disc list-inside text-notion-text-secondary space-y-2 ml-4 mb-4">
             <li><strong>Basic system information</strong> (CPU, GPU, RAM) → to understand performance differences across hardware</li>
-            <li><strong>FPS and stability data (pre- and post-CU1)</strong> → to identify performance improvements or regressions</li>
+            <li><strong>FPS and stability data (pre- and post-Last Humans)</strong> → to identify performance improvements or regressions</li>
             <li><strong>Bug reports and workarounds</strong> → to highlight common issues and how players are mitigating them</li>
-            <li><strong>Optional quest and story feedback</strong> → to understand player sentiment around CU1 content</li>
+            <li><strong>Optional quest and story feedback</strong> → to understand player sentiment around Last Humans content</li>
             <li><strong>Optional open-ended feedback</strong> → for anything not covered elsewhere</li>
           </ul>
           <p className="text-notion-text-secondary leading-relaxed">No sensitive personal information is collected.</p>

@@ -183,7 +183,7 @@ function QuestSurvey() {
           />
 
           <FormField
-            label="Pre-CU1 quests rating"
+            label="Pre-Last Humans quests rating"
             name="preCu1QuestsRating"
             type="select"
             value={formData.preCu1QuestsRating}

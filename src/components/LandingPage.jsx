@@ -24,7 +24,7 @@ function LandingPage() {
         <div className="text-center max-w-2xl mx-auto px-4">
           <h1 className="text-5xl font-bold mb-6">The Last Caretaker Survey</h1>
           <p className="text-xl text-notion-text-secondary mb-12">
-            Share your experience with the CU1 update
+            Share your experience with the Last Humans update
           </p>
           
           <div className="flex flex-col items-center gap-4 mb-4">

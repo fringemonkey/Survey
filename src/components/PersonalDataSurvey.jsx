@@ -40,6 +40,7 @@ function PersonalDataSurvey() {
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     // Scroll to top on mount
@@ -93,6 +94,7 @@ function PersonalDataSurvey() {
     
     setIsSubmitting(true)
     setSubmitStatus(null)
+    setErrorMessage(null)
     
     try {
       const submissionData = {
@@ -116,7 +118,14 @@ function PersonalDataSurvey() {
       setSubmitStatus('success')
     } catch (error) {
       console.error('Submission error:', error)
+      const errMsg = error.message || 'Unknown error occurred'
+      setErrorMessage(errMsg)
       setSubmitStatus('error')
+      console.error('Error details:', {
+        message: errMsg,
+        name: error.name,
+        stack: error.stack
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -257,7 +266,15 @@ function PersonalDataSurvey() {
           {submitStatus === 'error' && (
             <div className="bg-red-900/20 border border-red-500 rounded-lg p-4 text-red-400">
               <p className="font-semibold mb-2">Error submitting survey</p>
-              <p className="text-sm">Please check your connection and try again.</p>
+              <p className="text-sm">
+                {errorMessage || 'Please check your connection and try again.'}
+              </p>
+              {process.env.NODE_ENV === 'development' && errorMessage && (
+                <details className="mt-2 text-xs opacity-75">
+                  <summary className="cursor-pointer">Technical details</summary>
+                  <pre className="mt-2 whitespace-pre-wrap">{errorMessage}</pre>
+                </details>
+              )}
             </div>
           )}
         </form>
