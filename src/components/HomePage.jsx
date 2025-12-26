@@ -129,12 +129,6 @@ function HomePage() {
               Start Survey
             </Link>
             <Link
-              to="/dashboard"
-              className="bg-notion-blue hover:bg-notion-blue-hover text-white font-semibold px-8 py-4 rounded-lg transition-colors duration-200"
-            >
-              View Dashboard
-            </Link>
-            <Link
               to="/methodology"
               className="bg-notion-bg-tertiary hover:bg-notion-bg-secondary text-notion-text font-semibold px-8 py-4 rounded-lg transition-colors duration-200 border border-notion-bg-tertiary"
             >

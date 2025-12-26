@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS survey_responses_new (
   ram TEXT,
   tos INTEGER NOT NULL DEFAULT 0, -- checkbox: 0 = No, 1 = Yes
   response_id TEXT UNIQUE, -- Generated: TLC-CU1-{id}
+  storage TEXT, -- Added in 0003, but included here for compatibility if migration runs out of order
   
   -- Performance and Stability (Required)
   avg_fps_pre_cu1 INTEGER,
@@ -90,8 +91,40 @@ CREATE TABLE IF NOT EXISTS survey_responses_new (
 );
 
 -- Copy data from old table to new table (if old table exists)
-INSERT INTO survey_responses_new 
-SELECT * FROM survey_responses;
+-- Handle storage column: include it if it exists, otherwise use NULL
+-- We check if storage column exists by attempting to select it with a fallback
+INSERT INTO survey_responses_new (
+  id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id, storage,
+  avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
+  common_bugs_experienced, crashes_per_session, quest_bugs_experienced, which_quest_poi,
+  posted_about_issues_boat1, method_used_to_resolve_boat1, was_it_resolved_boat1, link_to_post_boat1,
+  posted_about_issues_boat2, method_used_to_resolve_boat2, was_it_resolved_boat2, link_to_post_boat2,
+  posted_about_issues_elevator, method_used_to_resolve_elevator, was_it_resolved_elevator, what_poi_elevator, link_to_post_elevator,
+  posted_about_issues_sliding, was_it_resolved_sliding, picture_sliding, link_to_post_sliding,
+  resolved_q_laz, additional_data,
+  quest_progress, pre_cu1_quests_rating, mother_rating, the_one_before_me_rating,
+  the_warehouse_rating, whispers_within_rating, smile_at_dark_rating, story_engagement, overall_quest_story_rating,
+  overall_score_post_cu1, open_feedback_space,
+  submitted_at, synced_to_notion, synced_at
+)
+SELECT 
+  id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id,
+  (SELECT storage FROM pragma_table_info('survey_responses') WHERE name = 'storage' LIMIT 1) IS NOT NULL 
+    THEN (SELECT storage FROM survey_responses WHERE id = outer.id)
+    ELSE NULL
+  END as storage,
+  avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
+  common_bugs_experienced, crashes_per_session, quest_bugs_experienced, which_quest_poi,
+  posted_about_issues_boat1, method_used_to_resolve_boat1, was_it_resolved_boat1, link_to_post_boat1,
+  posted_about_issues_boat2, method_used_to_resolve_boat2, was_it_resolved_boat2, link_to_post_boat2,
+  posted_about_issues_elevator, method_used_to_resolve_elevator, was_it_resolved_elevator, what_poi_elevator, link_to_post_elevator,
+  posted_about_issues_sliding, was_it_resolved_sliding, picture_sliding, link_to_post_sliding,
+  resolved_q_laz, additional_data,
+  quest_progress, pre_cu1_quests_rating, mother_rating, the_one_before_me_rating,
+  the_warehouse_rating, whispers_within_rating, smile_at_dark_rating, story_engagement, overall_quest_story_rating,
+  overall_score_post_cu1, open_feedback_space,
+  submitted_at, synced_to_notion, synced_at
+FROM survey_responses as outer;
 
 -- Drop old table
 DROP TABLE IF EXISTS survey_responses;

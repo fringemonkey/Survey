@@ -152,12 +152,14 @@ export async function onRequestPost(context) {
       // Generate response ID
       const responseId = await generateResponseId(env.DB)
 
-      // Insert bug data
+      // Insert bug data with individual binary columns
       const result = await env.DB.prepare(
         `INSERT INTO survey_responses (
           discord_name, age, cpu, gpu, ram, tos, response_id, storage,
-          common_bugs_experienced, crashes_per_session, additional_data, submitted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          bug_none, bug_boat_stuck, bug_boat_sinking, bug_sliding_buildings,
+          bug_elevator, bug_quest, bug_other, bug_other_text,
+          crashes_per_session, additional_data, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         null,
         null, // age not required
@@ -167,7 +169,14 @@ export async function onRequestPost(context) {
         0, // tos not required
         responseId,
         null,
-        formData.bugsExperienced ? JSON.stringify([formData.bugsExperienced]) : null,
+        formData.bugNone ? 1 : 0,
+        formData.bugBoatStuck ? 1 : 0,
+        formData.bugBoatSinking ? 1 : 0,
+        formData.bugSlidingBuildings ? 1 : 0,
+        formData.bugElevator ? 1 : 0,
+        formData.bugQuest ? 1 : 0,
+        formData.bugOther ? 1 : 0,
+        formData.bugOtherText || null,
         formData.crashesPerSession || null,
         JSON.stringify({
           bugFrequency: formData.bugFrequency || null,

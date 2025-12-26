@@ -77,6 +77,12 @@ function AboutPage() {
             Start Survey
           </Link>
           <Link
+            to="/info"
+            className="bg-notion-bg-tertiary hover:bg-notion-bg-secondary text-notion-text font-semibold px-8 py-4 rounded-lg transition-colors duration-200 inline-block mr-4 border border-notion-bg-tertiary"
+          >
+            More Info
+          </Link>
+          <Link
             to="/methodology"
             className="bg-notion-bg-tertiary hover:bg-notion-bg-secondary text-notion-text font-semibold px-8 py-4 rounded-lg transition-colors duration-200 inline-block border border-notion-bg-tertiary"
           >

@@ -5,16 +5,6 @@ import Footer from './Footer'
 import { submitSurvey } from '../services/api'
 import { hasConsent, refreshSession, setSessionCookie, isSessionValid } from '../utils/cookies'
 
-const BUG_EXPERIENCED_OPTIONS = [
-  { value: 'none', label: 'No bugs experienced' },
-  { value: 'boat_stuck', label: 'Boat Stuck' },
-  { value: 'boat_sinking', label: 'Boat Sinking/Flying' },
-  { value: 'sliding_buildings', label: 'Sliding buildings on boat' },
-  { value: 'elevator', label: 'Elevator issues' },
-  { value: 'quest', label: 'Quest bugs' },
-  { value: 'other', label: 'Other bugs' },
-]
-
 const BUG_FREQUENCY_OPTIONS = [
   { value: 'never', label: 'Never' },
   { value: 'rarely', label: 'Rarely (once or twice)' },
@@ -46,8 +36,14 @@ function BugSurvey() {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY)
       return saved ? JSON.parse(saved) : {
-        bugsExperienced: '',
-        bugsExperiencedOther: '',
+        bugNone: false,
+        bugBoatStuck: false,
+        bugBoatSinking: false,
+        bugSlidingBuildings: false,
+        bugElevator: false,
+        bugQuest: false,
+        bugOther: false,
+        bugOtherText: '',
         bugFrequency: '',
         bugImpact: '',
         crashesPerSession: '',
@@ -55,8 +51,14 @@ function BugSurvey() {
       }
     } catch {
       return {
-        bugsExperienced: '',
-        bugsExperiencedOther: '',
+        bugNone: false,
+        bugBoatStuck: false,
+        bugBoatSinking: false,
+        bugSlidingBuildings: false,
+        bugElevator: false,
+        bugQuest: false,
+        bugOther: false,
+        bugOtherText: '',
         bugFrequency: '',
         bugImpact: '',
         crashesPerSession: '',
@@ -85,13 +87,25 @@ function BugSurvey() {
   }, [navigate])
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     setFormData((prev) => {
       const updated = {
         ...prev,
-        [name]: value,
-        // Clear "Other" field when a non-Other option is selected
-        ...(name === 'bugsExperienced' && value !== 'other' ? { bugsExperiencedOther: '' } : {}),
+        [name]: type === 'checkbox' ? checked : value,
+        // If "none" is checked, uncheck all others
+        ...(name === 'bugNone' && checked ? {
+          bugBoatStuck: false,
+          bugBoatSinking: false,
+          bugSlidingBuildings: false,
+          bugElevator: false,
+          bugQuest: false,
+          bugOther: false,
+          bugOtherText: '',
+        } : {}),
+        // If any other bug is checked, uncheck "none"
+        ...(name.startsWith('bug') && name !== 'bugNone' && name !== 'bugOtherText' && checked ? {
+          bugNone: false,
+        } : {}),
       }
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated))
       return updated
@@ -114,10 +128,6 @@ function BugSurvey() {
     try {
       const submissionData = {
         ...formData,
-        // Use custom value if "other" is selected
-        bugsExperienced: formData.bugsExperienced === 'other' && formData.bugsExperiencedOther 
-          ? formData.bugsExperiencedOther 
-          : formData.bugsExperienced,
         surveyType: 'bug',
       }
       
@@ -189,18 +199,95 @@ function BugSurvey() {
         </p>
 
         <form onSubmit={handleSubmit} className="bg-notion-bg-secondary rounded-lg p-6 space-y-6">
-          <FormField
-            label="What bugs have you experienced?"
-            name="bugsExperienced"
-            type="select"
-            value={formData.bugsExperienced}
-            onChange={handleChange}
-            onOtherChange={handleChange}
-            otherValue={formData.bugsExperiencedOther}
-            otherPlaceholder="Please describe the other bugs..."
-            placeholder="Select bugs experienced..."
-            options={BUG_EXPERIENCED_OPTIONS}
-          />
+          <div className="mb-6">
+            <label className="block mb-2 font-medium text-notion-text">
+              What bugs have you experienced?
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer hover:text-notion-accent transition-colors">
+                <input
+                  type="checkbox"
+                  name="bugNone"
+                  checked={formData.bugNone}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+                />
+                <span>No bugs experienced</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer hover:text-notion-accent transition-colors">
+                <input
+                  type="checkbox"
+                  name="bugBoatStuck"
+                  checked={formData.bugBoatStuck}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+                />
+                <span>Boat Stuck</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer hover:text-notion-accent transition-colors">
+                <input
+                  type="checkbox"
+                  name="bugBoatSinking"
+                  checked={formData.bugBoatSinking}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+                />
+                <span>Boat Sinking/Flying</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer hover:text-notion-accent transition-colors">
+                <input
+                  type="checkbox"
+                  name="bugSlidingBuildings"
+                  checked={formData.bugSlidingBuildings}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+                />
+                <span>Sliding buildings on boat</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer hover:text-notion-accent transition-colors">
+                <input
+                  type="checkbox"
+                  name="bugElevator"
+                  checked={formData.bugElevator}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+                />
+                <span>Elevator issues</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer hover:text-notion-accent transition-colors">
+                <input
+                  type="checkbox"
+                  name="bugQuest"
+                  checked={formData.bugQuest}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+                />
+                <span>Quest bugs</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer hover:text-notion-accent transition-colors">
+                <input
+                  type="checkbox"
+                  name="bugOther"
+                  checked={formData.bugOther}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+                />
+                <span>Other bugs</span>
+              </label>
+              {formData.bugOther && (
+                <div className="mt-2 ml-6">
+                  <input
+                    type="text"
+                    name="bugOtherText"
+                    value={formData.bugOtherText}
+                    onChange={handleChange}
+                    placeholder="Please describe the other bugs..."
+                    className="w-full px-4 py-2 bg-notion-bg-secondary border border-notion-bg-tertiary rounded-lg text-notion-text placeholder-notion-text-secondary focus:outline-none focus:ring-2 focus:ring-notion-accent focus:border-transparent transition-all duration-200"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
           <FormField
             label="How frequently do you encounter bugs?"
