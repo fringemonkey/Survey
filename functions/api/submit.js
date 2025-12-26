@@ -102,6 +102,179 @@ export async function onRequestPost(context) {
       )
     }
     
+    // Handle performance survey (required, no age/tos needed)
+    if (surveyType === 'performance') {
+      // Generate response ID
+      const responseId = await generateResponseId(env.DB)
+
+      // Insert performance data
+      const result = await env.DB.prepare(
+        `INSERT INTO survey_responses (
+          discord_name, age, cpu, gpu, ram, tos, response_id, storage,
+          avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
+          playtime, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        null,
+        null, // age not required
+        null, // no hardware data
+        null,
+        null,
+        0, // tos not required
+        responseId,
+        null,
+        formData.avgFpsPreCu1 || null,
+        formData.avgFpsPostCu1 || null,
+        formData.performanceChange || null,
+        formData.overallStability ? parseInt(formData.overallStability) : null,
+        formData.playtime || null,
+        new Date().toISOString()
+      ).run()
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          id: result.meta.last_row_id,
+          responseId: responseId
+        }),
+        { 
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          } 
+        }
+      )
+    }
+    
+    // Handle bug survey (optional, no age/tos needed)
+    if (surveyType === 'bug') {
+      // Generate response ID
+      const responseId = await generateResponseId(env.DB)
+
+      // Insert bug data
+      const result = await env.DB.prepare(
+        `INSERT INTO survey_responses (
+          discord_name, age, cpu, gpu, ram, tos, response_id, storage,
+          common_bugs_experienced, crashes_per_session, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        null,
+        null, // age not required
+        null, // no hardware data
+        null,
+        null,
+        0, // tos not required
+        responseId,
+        null,
+        formData.bugsExperienced ? JSON.stringify([formData.bugsExperienced]) : null,
+        formData.crashesPerSession || null,
+        new Date().toISOString()
+      ).run()
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          id: result.meta.last_row_id,
+          responseId: responseId
+        }),
+        { 
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          } 
+        }
+      )
+    }
+    
+    // Handle quest survey (optional, no age/tos needed)
+    if (surveyType === 'quest') {
+      // Generate response ID
+      const responseId = await generateResponseId(env.DB)
+
+      // Insert quest data
+      const result = await env.DB.prepare(
+        `INSERT INTO survey_responses (
+          discord_name, age, cpu, gpu, ram, tos, response_id, storage,
+          quest_progress, pre_cu1_quests_rating, overall_quest_story_rating,
+          quest_bugs_experienced, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        null,
+        null, // age not required
+        null, // no hardware data
+        null,
+        null,
+        0, // tos not required
+        responseId,
+        null,
+        formData.questProgress || null,
+        formData.preCu1QuestsRating ? parseInt(formData.preCu1QuestsRating) : null,
+        formData.overallQuestRating ? parseInt(formData.overallQuestRating) : null,
+        formData.questBugs && formData.questBugs !== 'no' ? 1 : 0,
+        new Date().toISOString()
+      ).run()
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          id: result.meta.last_row_id,
+          responseId: responseId
+        }),
+        { 
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          } 
+        }
+      )
+    }
+    
+    // Handle story survey (optional, no age/tos needed)
+    if (surveyType === 'story') {
+      // Generate response ID
+      const responseId = await generateResponseId(env.DB)
+
+      // Insert story data
+      const result = await env.DB.prepare(
+        `INSERT INTO survey_responses (
+          discord_name, age, cpu, gpu, ram, tos, response_id, storage,
+          story_engagement, overall_quest_story_rating, overall_score_post_cu1,
+          submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        null,
+        null, // age not required
+        null, // no hardware data
+        null,
+        null,
+        0, // tos not required
+        responseId,
+        null,
+        formData.storyEngagement ? parseInt(formData.storyEngagement) : null,
+        formData.overallStoryRating ? parseInt(formData.overallStoryRating) : null,
+        formData.overallScore ? parseInt(formData.overallScore) : null,
+        new Date().toISOString()
+      ).run()
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          id: result.meta.last_row_id,
+          responseId: responseId
+        }),
+        { 
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          } 
+        }
+      )
+    }
+    
     // Handle optional surveys - they need to be linked to an existing hardware submission
     // For now, we'll create a new record for each optional survey
     // In a production system, you'd want to link them via response_id
