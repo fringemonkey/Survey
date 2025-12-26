@@ -8,8 +8,68 @@ export async function onRequestPost(context) {
   
   try {
     const formData = await request.json()
+    const surveyType = formData.surveyType || 'full'
     
-    // Validate required fields
+    // Handle hardware survey (required)
+    if (surveyType === 'hardware') {
+      // Validate required fields for hardware survey
+      if (!formData.age || !formData.tos) {
+        return new Response(
+          JSON.stringify({ error: 'Missing required fields: Age and TOS agreement are required' }),
+          { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        )
+      }
+
+      // Validate age
+      const age = parseInt(formData.age)
+      if (isNaN(age) || age < 16) {
+        return new Response(
+          JSON.stringify({ error: 'Age must be 16 or older' }),
+          { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        )
+      }
+
+      // Generate response ID
+      const responseId = await generateResponseId(env.DB)
+
+      // Insert hardware data
+      const result = await env.DB.prepare(
+        `INSERT INTO survey_responses (
+          discord_name, age, cpu, gpu, ram, tos, response_id, storage, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        null,
+        age,
+        formData.cpu || null,
+        formData.gpu || null,
+        formData.ram || null,
+        formData.tos ? 1 : 0,
+        responseId,
+        formData.storage || null,
+        new Date().toISOString()
+      ).run()
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          id: result.meta.last_row_id,
+          responseId: responseId
+        }),
+        { 
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          } 
+        }
+      )
+    }
+    
+    // Handle optional surveys - they need to be linked to an existing hardware submission
+    // For now, we'll create a new record for each optional survey
+    // In a production system, you'd want to link them via response_id
+    
+    // For backward compatibility, handle full form submission
     if (!formData.age || !formData.tos) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: Age and TOS agreement are required' }),
@@ -22,18 +82,11 @@ export async function onRequestPost(context) {
     if (isNaN(age) || age < 16) {
       return new Response(
         JSON.stringify({ error: 'Age must be 16 or older' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       )
     }
 
-    // Validate Step 2 required fields
-    if (!formData.avgFpsPreCu1 || !formData.avgFpsPostCu1 || !formData.preCu1VsPost || !formData.overallClientStability) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required performance data' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
+    // For optional surveys, we still need age/tos but don't require performance data
     // Generate response ID
     const responseId = await generateResponseId(env.DB)
 
@@ -43,19 +96,20 @@ export async function onRequestPost(context) {
       age: age,
       cpu: formData.cpu || null,
       gpu: formData.gpu || null,
-      playtime: formData.playtime ? parseInt(formData.playtime) : null,
+      playtime: formData.playtime ? (typeof formData.playtime === 'string' ? formData.playtime : parseInt(formData.playtime)) : null,
       ram: formData.ram || null,
+      storage: formData.storage || null,
       tos: formData.tos ? 1 : 0,
       response_id: responseId,
       
-      // Performance and Stability
-      avg_fps_pre_cu1: parseInt(formData.avgFpsPreCu1),
-      avg_fps_post_cu1: parseInt(formData.avgFpsPostCu1),
-      pre_cu1_vs_post: formData.preCu1VsPost,
-      overall_client_stability: parseInt(formData.overallClientStability),
-      common_bugs_experienced: JSON.stringify(formData.commonBugsExperienced || []),
-      crashes_per_session: formData.crashesPerSession ? parseInt(formData.crashesPerSession) : null,
-      quest_bugs_experienced: formData.questBugsExperienced ? 1 : 0,
+      // Performance and Stability (optional for modular surveys)
+      avg_fps_pre_cu1: formData.avgFpsPreCu1 ? (typeof formData.avgFpsPreCu1 === 'string' ? formData.avgFpsPreCu1 : parseInt(formData.avgFpsPreCu1)) : null,
+      avg_fps_post_cu1: formData.avgFpsPostCu1 ? (typeof formData.avgFpsPostCu1 === 'string' ? formData.avgFpsPostCu1 : parseInt(formData.avgFpsPostCu1)) : null,
+      pre_cu1_vs_post: formData.preCu1VsPost || formData.performanceChange || null,
+      overall_client_stability: formData.overallClientStability || formData.overallStability ? parseInt(formData.overallClientStability || formData.overallStability) : null,
+      common_bugs_experienced: formData.commonBugsExperienced ? JSON.stringify(formData.commonBugsExperienced) : (formData.bugsExperienced ? JSON.stringify([formData.bugsExperienced]) : null),
+      crashes_per_session: formData.crashesPerSession ? (typeof formData.crashesPerSession === 'string' ? formData.crashesPerSession : parseInt(formData.crashesPerSession)) : null,
+      quest_bugs_experienced: formData.questBugsExperienced ? 1 : (formData.questBugs ? (formData.questBugs !== 'no' ? 1 : 0) : 0),
       which_quest_poi: formData.whichQuestPoi || null,
       
       // Bug-specific fields
@@ -92,10 +146,10 @@ export async function onRequestPost(context) {
       whispers_within_rating: formData.whispersWithinRating ? parseInt(formData.whispersWithinRating) : null,
       smile_at_dark_rating: formData.smileAtDarkRating ? parseInt(formData.smileAtDarkRating) : null,
       story_engagement: formData.storyEngagement ? parseInt(formData.storyEngagement) : null,
-      overall_quest_story_rating: formData.overallQuestStoryRating ? parseInt(formData.overallQuestStoryRating) : null,
+      overall_quest_story_rating: formData.overallQuestStoryRating || formData.overallQuestRating ? parseInt(formData.overallQuestStoryRating || formData.overallQuestRating) : null,
       
       // Overall Feelings (Optional)
-      overall_score_post_cu1: formData.overallScorePostCu1 ? parseInt(formData.overallScorePostCu1) : null,
+      overall_score_post_cu1: formData.overallScorePostCu1 || formData.overallScore ? parseInt(formData.overallScorePostCu1 || formData.overallScore) : null,
       open_feedback_space: formData.openFeedbackSpace || null,
       
       submitted_at: new Date().toISOString(),
@@ -104,7 +158,7 @@ export async function onRequestPost(context) {
     // Insert into D1 database
     const result = await env.DB.prepare(
       `INSERT INTO survey_responses (
-        discord_name, age, cpu, gpu, playtime, ram, tos, response_id,
+        discord_name, age, cpu, gpu, playtime, ram, storage, tos, response_id,
         avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
         common_bugs_experienced, crashes_per_session, quest_bugs_experienced, which_quest_poi,
         posted_about_issues_boat1, method_used_to_resolve_boat1, was_it_resolved_boat1, link_to_post_boat1,
@@ -116,7 +170,7 @@ export async function onRequestPost(context) {
         the_warehouse_rating, whispers_within_rating, smile_at_dark_rating, story_engagement, overall_quest_story_rating,
         overall_score_post_cu1, open_feedback_space,
         submitted_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       insertData.discord_name,
       insertData.age,
@@ -124,6 +178,7 @@ export async function onRequestPost(context) {
       insertData.gpu,
       insertData.playtime,
       insertData.ram,
+      insertData.storage,
       insertData.tos,
       insertData.response_id,
       insertData.avg_fps_pre_cu1,
