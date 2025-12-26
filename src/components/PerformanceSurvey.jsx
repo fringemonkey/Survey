@@ -6,7 +6,7 @@ import { submitSurvey } from '../services/api'
 import { hasConsent, refreshSession, setSessionCookie, isSessionValid } from '../utils/cookies'
 
 const FPS_RANGE_OPTIONS = [
-  { value: '0-20', label: '0-20 FPS' },
+  { value: '20', label: '20 FPS' },
   { value: '21-30', label: '21-30 FPS' },
   { value: '31-45', label: '31-45 FPS' },
   { value: '46-60', label: '46-60 FPS' },
@@ -60,6 +60,9 @@ function PerformanceSurvey() {
   const [submitStatus, setSubmitStatus] = useState(null)
 
   useEffect(() => {
+    // Scroll to top on mount
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    
     if (!hasConsent()) {
       navigate('/survey')
       return
@@ -163,30 +166,73 @@ function PerformanceSurvey() {
 
       <div className="max-w-2xl mx-auto">
         <h2 className="text-4xl font-bold mb-2">Performance</h2>
-        <p className="text-notion-text-secondary mb-8">
-          Optional survey • 5 questions • ~2 minutes
+        <p className="text-notion-text-secondary mb-4">
+          Required survey • 5 questions • ~2 minutes
+        </p>
+        <p className="text-sm text-notion-text-secondary mb-8 bg-notion-bg-secondary rounded-lg p-4 border border-notion-border">
+          <strong>Note:</strong> Approximate FPS numbers are perfectly fine. The more accurate you can be, the better, but estimates are welcome!
         </p>
 
         <form onSubmit={handleSubmit} className="bg-notion-bg-secondary rounded-lg p-6 space-y-6">
-          <FormField
-            label="Average FPS before CU1"
-            name="avgFpsPreCu1"
-            type="select"
-            value={formData.avgFpsPreCu1}
-            onChange={handleChange}
-            placeholder="Select FPS range..."
-            options={FPS_RANGE_OPTIONS}
-          />
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <label htmlFor="avgFpsPreCu1" className="block font-medium text-notion-text">
+                Average FPS before CU1
+              </label>
+              <div className="group relative">
+                <svg 
+                  className="w-4 h-4 text-notion-text-secondary hover:text-notion-text cursor-help" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-notion-bg border border-notion-border rounded-lg text-xs text-notion-text shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  Note: The in-game FPS counter doesn't display below 20 FPS (this is a bug in the current build). If your FPS is below 20, select "20 FPS" as the minimum.
+                </div>
+              </div>
+            </div>
+            <FormField
+              label=""
+              name="avgFpsPreCu1"
+              type="select"
+              value={formData.avgFpsPreCu1}
+              onChange={handleChange}
+              placeholder="Select FPS range..."
+              options={FPS_RANGE_OPTIONS}
+            />
+          </div>
 
-          <FormField
-            label="Average FPS after CU1"
-            name="avgFpsPostCu1"
-            type="select"
-            value={formData.avgFpsPostCu1}
-            onChange={handleChange}
-            placeholder="Select FPS range..."
-            options={FPS_RANGE_OPTIONS}
-          />
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <label htmlFor="avgFpsPostCu1" className="block font-medium text-notion-text">
+                Average FPS after CU1
+              </label>
+              <div className="group relative">
+                <svg 
+                  className="w-4 h-4 text-notion-text-secondary hover:text-notion-text cursor-help" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-notion-bg border border-notion-border rounded-lg text-xs text-notion-text shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  Note: The in-game FPS counter doesn't display below 20 FPS (this is a bug in the current build). If your FPS is below 20, select "20 FPS" as the minimum.
+                </div>
+              </div>
+            </div>
+            <FormField
+              label=""
+              name="avgFpsPostCu1"
+              type="select"
+              value={formData.avgFpsPostCu1}
+              onChange={handleChange}
+              placeholder="Select FPS range..."
+              options={FPS_RANGE_OPTIONS}
+            />
+          </div>
 
           <FormField
             label="How has performance changed?"
@@ -230,7 +276,7 @@ function PerformanceSurvey() {
               onClick={() => navigate('/survey/select')}
               className="px-6 py-3 bg-notion-bg-secondary hover:bg-notion-bg-tertiary text-notion-text rounded-lg transition-colors duration-200"
             >
-              Skip
+              Cancel
             </button>
             <button
               type="submit"

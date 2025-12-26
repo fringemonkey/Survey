@@ -10,9 +10,47 @@ export async function onRequestPost(context) {
     const formData = await request.json()
     const surveyType = formData.surveyType || 'full'
     
-    // Handle hardware survey (required)
+    // Handle hardware survey (required, no age/tos needed)
     if (surveyType === 'hardware') {
-      // Validate required fields for hardware survey
+      // Generate response ID
+      const responseId = await generateResponseId(env.DB)
+
+      // Insert hardware data (no age/tos required)
+      const result = await env.DB.prepare(
+        `INSERT INTO survey_responses (
+          discord_name, age, cpu, gpu, ram, tos, response_id, storage, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        null,
+        null, // age not required for hardware survey
+        formData.cpu || null,
+        formData.gpu || null,
+        formData.ram || null,
+        0, // tos not required for hardware survey
+        responseId,
+        formData.storage || null,
+        new Date().toISOString()
+      ).run()
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          id: result.meta.last_row_id,
+          responseId: responseId
+        }),
+        { 
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          } 
+        }
+      )
+    }
+    
+    // Handle personal data survey (optional, requires age/tos)
+    if (surveyType === 'personal') {
+      // Validate required fields for personal data survey
       if (!formData.age || !formData.tos) {
         return new Response(
           JSON.stringify({ error: 'Missing required fields: Age and TOS agreement are required' }),
@@ -32,20 +70,19 @@ export async function onRequestPost(context) {
       // Generate response ID
       const responseId = await generateResponseId(env.DB)
 
-      // Insert hardware data
+      // Insert personal data
       const result = await env.DB.prepare(
         `INSERT INTO survey_responses (
-          discord_name, age, cpu, gpu, ram, tos, response_id, storage, submitted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          discord_name, age, cpu, gpu, ram, tos, response_id, submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
-        null,
+        formData.discordName || null,
         age,
-        formData.cpu || null,
-        formData.gpu || null,
-        formData.ram || null,
+        null, // no hardware data
+        null,
+        null,
         formData.tos ? 1 : 0,
         responseId,
-        formData.storage || null,
         new Date().toISOString()
       ).run()
 

@@ -5,62 +5,33 @@ import Footer from './Footer'
 import { submitSurvey } from '../services/api'
 import { hasConsent, refreshSession, setSessionCookie, isSessionValid } from '../utils/cookies'
 
-const BUG_EXPERIENCED_OPTIONS = [
-  { value: 'none', label: 'No bugs experienced' },
-  { value: 'boat_stuck', label: 'Boat Stuck' },
-  { value: 'boat_sinking', label: 'Boat Sinking/Flying' },
-  { value: 'sliding_buildings', label: 'Sliding buildings on boat' },
-  { value: 'elevator', label: 'Elevator issues' },
-  { value: 'quest', label: 'Quest bugs' },
-  { value: 'other', label: 'Other bugs' },
+const AGE_RANGES = [
+  { value: '16', label: '16-25' },
+  { value: '26', label: '26-35' },
+  { value: '36', label: '36-45' },
+  { value: '46', label: '46-55' },
+  { value: '56', label: '56-65' },
+  { value: '66', label: '66-75' },
+  { value: '76', label: '76+' },
 ]
 
-const BUG_FREQUENCY_OPTIONS = [
-  { value: 'never', label: 'Never' },
-  { value: 'rarely', label: 'Rarely (once or twice)' },
-  { value: 'sometimes', label: 'Sometimes (a few times)' },
-  { value: 'often', label: 'Often (regularly)' },
-  { value: 'always', label: 'Always (every session)' },
-]
+const DRAFT_STORAGE_KEY = 'personal_data_survey_draft'
 
-const BUG_IMPACT_OPTIONS = [
-  { value: 'none', label: 'No impact' },
-  { value: 'minor', label: 'Minor inconvenience' },
-  { value: 'moderate', label: 'Moderate impact' },
-  { value: 'major', label: 'Major impact' },
-  { value: 'game_breaking', label: 'Game breaking' },
-]
-
-const RESOLVED_OPTIONS = [
-  { value: 'yes', label: 'Yes, resolved' },
-  { value: 'partial', label: 'Partially resolved' },
-  { value: 'no', label: 'No, not resolved' },
-  { value: 'workaround', label: 'Found a workaround' },
-]
-
-const DRAFT_STORAGE_KEY = 'bug_survey_draft'
-
-function BugSurvey() {
+function PersonalDataSurvey() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState(() => {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY)
       return saved ? JSON.parse(saved) : {
-        bugsExperienced: '',
-        bugsExperiencedOther: '',
-        bugFrequency: '',
-        bugImpact: '',
-        crashesPerSession: '',
-        resolved: '',
+        age: '',
+        discordName: '',
+        tos: false,
       }
     } catch {
       return {
-        bugsExperienced: '',
-        bugsExperiencedOther: '',
-        bugFrequency: '',
-        bugImpact: '',
-        crashesPerSession: '',
-        resolved: '',
+        age: '',
+        discordName: '',
+        tos: false,
       }
     }
   })
@@ -85,13 +56,11 @@ function BugSurvey() {
   }, [navigate])
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
     setFormData((prev) => {
       const updated = {
         ...prev,
-        [name]: value,
-        // Clear "Other" field when a non-Other option is selected
-        ...(name === 'bugsExperienced' && value !== 'other' ? { bugsExperiencedOther: '' } : {}),
+        [name]: type === 'checkbox' ? checked : value,
       }
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated))
       return updated
@@ -105,20 +74,30 @@ function BugSurvey() {
     }
   }
 
+  const validate = () => {
+    const newErrors = {}
+    if (!formData.age) newErrors.age = 'Please select your age range'
+    if (!formData.tos) newErrors.tos = 'You must agree to the Terms of Service'
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!validate()) {
+      return
+    }
     
     setIsSubmitting(true)
     setSubmitStatus(null)
     
     try {
       const submissionData = {
-        ...formData,
-        // Use custom value if "other" is selected
-        bugsExperienced: formData.bugsExperienced === 'other' && formData.bugsExperiencedOther 
-          ? formData.bugsExperiencedOther 
-          : formData.bugsExperienced,
-        surveyType: 'bug',
+        age: formData.age,
+        discordName: formData.discordName || null,
+        tos: formData.tos,
+        surveyType: 'personal',
       }
       
       await submitSurvey(submissionData)
@@ -126,8 +105,8 @@ function BugSurvey() {
       
       // Mark as completed
       const completed = JSON.parse(localStorage.getItem('completed_surveys') || '[]')
-      if (!completed.includes('bug')) {
-        completed.push('bug')
+      if (!completed.includes('personal')) {
+        completed.push('personal')
         localStorage.setItem('completed_surveys', JSON.stringify(completed))
       }
       
@@ -146,7 +125,7 @@ function BugSurvey() {
         <div className="bg-green-900/20 border border-green-500 rounded-lg p-8 text-center max-w-2xl mx-auto">
           <h2 className="text-2xl font-bold mb-4 text-green-400">Thank You!</h2>
           <p className="text-notion-text-secondary mb-6">
-            Your bug report has been submitted successfully.
+            Your personal data has been submitted successfully.
           </p>
           <div className="flex gap-4 justify-center">
             <button
@@ -183,70 +162,61 @@ function BugSurvey() {
       </div>
 
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-4xl font-bold mb-2">Bug Report</h2>
+        <h2 className="text-4xl font-bold mb-2">Personal Data</h2>
         <p className="text-notion-text-secondary mb-8">
-          Optional survey • 5 questions • ~2 minutes
+          Optional survey • 3 questions • ~1 minute
         </p>
 
         <form onSubmit={handleSubmit} className="bg-notion-bg-secondary rounded-lg p-6 space-y-6">
-          <FormField
-            label="What bugs have you experienced?"
-            name="bugsExperienced"
-            type="select"
-            value={formData.bugsExperienced}
-            onChange={handleChange}
-            onOtherChange={handleChange}
-            otherValue={formData.bugsExperiencedOther}
-            otherPlaceholder="Please describe the other bugs..."
-            placeholder="Select bugs experienced..."
-            options={BUG_EXPERIENCED_OPTIONS}
-          />
+          <div>
+            <label className="block text-sm font-medium text-notion-text mb-2">
+              Age Range <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="age"
+              value={formData.age}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 bg-notion-bg border rounded-lg text-notion-text focus:outline-none focus:ring-2 focus:ring-notion-blue ${
+                errors.age ? 'border-red-500' : 'border-notion-border'
+              }`}
+              required
+            >
+              <option value="">Select your age range...</option>
+              {AGE_RANGES.map((range) => (
+                <option key={range.value} value={range.value}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
+            {errors.age && (
+              <p className="text-red-500 text-sm mt-1">{errors.age}</p>
+            )}
+          </div>
 
           <FormField
-            label="How frequently do you encounter bugs?"
-            name="bugFrequency"
-            type="select"
-            value={formData.bugFrequency}
+            label="Discord Name (optional)"
+            name="discordName"
+            type="text"
+            value={formData.discordName}
             onChange={handleChange}
-            placeholder="Select frequency..."
-            options={BUG_FREQUENCY_OPTIONS}
+            placeholder="Your Discord username (optional)"
           />
 
-          <FormField
-            label="What is the impact of bugs on your gameplay?"
-            name="bugImpact"
-            type="select"
-            value={formData.bugImpact}
-            onChange={handleChange}
-            placeholder="Select impact level..."
-            options={BUG_IMPACT_OPTIONS}
-          />
-
-          <FormField
-            label="Average crashes per session"
-            name="crashesPerSession"
-            type="select"
-            value={formData.crashesPerSession}
-            onChange={handleChange}
-            placeholder="Select number..."
-            options={[
-              { value: '0', label: '0 - No crashes' },
-              { value: '1', label: '1' },
-              { value: '2', label: '2' },
-              { value: '3', label: '3' },
-              { value: '4+', label: '4 or more' },
-            ]}
-          />
-
-          <FormField
-            label="Have bugs been resolved or do you have workarounds?"
-            name="resolved"
-            type="select"
-            value={formData.resolved}
-            onChange={handleChange}
-            placeholder="Select status..."
-            options={RESOLVED_OPTIONS}
-          />
+          <div className="mb-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="tos"
+                checked={formData.tos}
+                onChange={handleChange}
+                className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
+              />
+              <span className="text-notion-text">
+                I agree to the Terms of Service and am 16 years or older <span className="text-red-500">*</span>
+              </span>
+            </label>
+            {errors.tos && <p className="mt-1 text-sm text-red-500">{errors.tos}</p>}
+          </div>
 
           <div className="flex justify-end gap-4 pt-6">
             <button
@@ -279,5 +249,5 @@ function BugSurvey() {
   )
 }
 
-export default BugSurvey
+export default PersonalDataSurvey
 

@@ -12,7 +12,7 @@ function AboutPage() {
       <div className="notion-content py-12">
         <div className="mb-8">
           <Link
-            to="/"
+            to="/info"
             className="text-notion-text-secondary hover:text-notion-accent transition-colors flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

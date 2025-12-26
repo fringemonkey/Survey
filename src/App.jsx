@@ -9,17 +9,21 @@ import BugSurvey from './components/BugSurvey'
 import PerformanceSurvey from './components/PerformanceSurvey'
 import QuestSurvey from './components/QuestSurvey'
 import StorySurvey from './components/StorySurvey'
+import PersonalDataSurvey from './components/PersonalDataSurvey'
 import SurveyForm from './components/SurveyForm'
 import CookiePolicyPage from './components/CookiePolicyPage'
 import DashboardPage from './components/DashboardPage'
+import ScrollToTop from './components/ScrollToTop'
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-notion-bg text-notion-text">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/info" element={<HomePage />} />
           <Route path="/methodology" element={<MethodologyPage />} />
           <Route path="/survey" element={<LandingPage />} />
           <Route path="/survey/select" element={<SurveySelectionPage />} />
@@ -28,6 +32,7 @@ function App() {
           <Route path="/survey/performance" element={<PerformanceSurvey />} />
           <Route path="/survey/quest" element={<QuestSurvey />} />
           <Route path="/survey/story" element={<StorySurvey />} />
+          <Route path="/survey/personal" element={<PersonalDataSurvey />} />
           <Route path="/survey/form" element={<SurveyForm />} />
           <Route path="/cookie-policy" element={<CookiePolicyPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />

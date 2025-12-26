@@ -66,21 +66,35 @@ function FormField({
           className={baseClasses}
         />
       ) : type === 'select' ? (
-        <select
-          id={name}
-          name={name}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className={baseClasses}
-        >
-          <option value="">Select an option...</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <>
+          <select
+            id={name}
+            name={name}
+            value={value}
+            onChange={onChange}
+            required={required}
+            className={baseClasses}
+          >
+            <option value="">Select an option...</option>
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {(value === 'other' || value === 'Other') && (
+            <div className="mt-3">
+              <input
+                type="text"
+                name={`${name}Other`}
+                value={otherValue}
+                onChange={onOtherChange}
+                placeholder={otherPlaceholder || 'Please specify...'}
+                className={baseClasses}
+              />
+            </div>
+          )}
+        </>
       ) : type === 'radio' ? (
         <div className="space-y-2">
           {options.map((option) => (

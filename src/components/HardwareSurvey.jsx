@@ -7,16 +7,6 @@ import { submitSurvey } from '../services/api'
 import { CPU_OPTIONS, GPU_OPTIONS, RAM_OPTIONS, STORAGE_OPTIONS } from '../data/hardwareOptions'
 import { hasConsent, refreshSession, setSessionCookie, isSessionValid } from '../utils/cookies'
 
-const AGE_RANGES = [
-  { value: '16', label: '16-25' },
-  { value: '26', label: '26-35' },
-  { value: '36', label: '36-45' },
-  { value: '46', label: '46-55' },
-  { value: '56', label: '56-65' },
-  { value: '66', label: '66-75' },
-  { value: '76', label: '76+' },
-]
-
 const DRAFT_STORAGE_KEY = 'hardware_survey_draft'
 
 function HardwareSurvey() {
@@ -25,25 +15,21 @@ function HardwareSurvey() {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY)
       return saved ? JSON.parse(saved) : {
-        age: '',
         cpu: '',
         cpuOther: '',
         gpu: '',
         gpuOther: '',
         ram: '',
         storage: '',
-        tos: false,
       }
     } catch {
       return {
-        age: '',
         cpu: '',
         cpuOther: '',
         gpu: '',
         gpuOther: '',
         ram: '',
         storage: '',
-        tos: false,
       }
     }
   })
@@ -52,6 +38,9 @@ function HardwareSurvey() {
   const [submitStatus, setSubmitStatus] = useState(null)
 
   useEffect(() => {
+    // Scroll to top on mount
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    
     if (!hasConsent()) {
       navigate('/survey')
       return
@@ -87,12 +76,10 @@ function HardwareSurvey() {
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.age) newErrors.age = 'Please select your age range'
     if (!formData.cpu) newErrors.cpu = 'Please select your CPU'
     if (!formData.gpu) newErrors.gpu = 'Please select your GPU'
     if (!formData.ram) newErrors.ram = 'Please select your RAM'
     if (!formData.storage) newErrors.storage = 'Please select your storage type'
-    if (!formData.tos) newErrors.tos = 'You must agree to the Terms of Service'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -109,12 +96,10 @@ function HardwareSurvey() {
     
     try {
       const submissionData = {
-        age: formData.age,
         cpu: formData.cpu === 'Other' && formData.cpuOther ? formData.cpuOther : formData.cpu,
         gpu: formData.gpu === 'Other' && formData.gpuOther ? formData.gpuOther : formData.gpu,
         ram: formData.ram,
         storage: formData.storage,
-        tos: formData.tos,
         surveyType: 'hardware',
       }
       
@@ -182,42 +167,17 @@ function HardwareSurvey() {
       <div className="max-w-2xl mx-auto">
         <h2 className="text-4xl font-bold mb-2">Hardware Specs</h2>
         <p className="text-notion-text-secondary mb-8">
-          Required survey • 5 questions • ~2 minutes
+          Required survey • 4 questions • ~2 minutes
         </p>
 
         <form onSubmit={handleSubmit} className="bg-notion-bg-secondary rounded-lg p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-notion-text mb-2">
-              Age Range <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="age"
-              value={formData.age}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 bg-notion-bg border rounded-lg text-notion-text focus:outline-none focus:ring-2 focus:ring-notion-blue ${
-                errors.age ? 'border-red-500' : 'border-notion-border'
-              }`}
-              required
-            >
-              <option value="">Select your age range...</option>
-              {AGE_RANGES.map((range) => (
-                <option key={range.value} value={range.value}>
-                  {range.label}
-                </option>
-              ))}
-            </select>
-            {errors.age && (
-              <p className="text-red-500 text-sm mt-1">{errors.age}</p>
-            )}
-          </div>
-
           <SearchableDropdown
             label="CPU"
             name="cpu"
             value={formData.cpu}
             onChange={handleChange}
             onOtherChange={handleChange}
-            placeholder="Search for your CPU..."
+            placeholder="Start typing to search for your CPU"
             options={CPU_OPTIONS}
             otherValue={formData.cpuOther}
             otherPlaceholder="Specify your CPU model..."
@@ -231,7 +191,7 @@ function HardwareSurvey() {
             value={formData.gpu}
             onChange={handleChange}
             onOtherChange={handleChange}
-            placeholder="Search for your GPU..."
+            placeholder="Start typing to search for your GPU"
             options={GPU_OPTIONS}
             otherValue={formData.gpuOther}
             otherPlaceholder="Specify your GPU model..."
@@ -262,22 +222,6 @@ function HardwareSurvey() {
             error={errors.storage}
             required
           />
-
-          <div className="mb-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                name="tos"
-                checked={formData.tos}
-                onChange={handleChange}
-                className="w-4 h-4 text-notion-accent focus:ring-notion-accent"
-              />
-              <span className="text-notion-text">
-                I agree to the Terms of Service and am 16 years or older <span className="text-red-500">*</span>
-              </span>
-            </label>
-            {errors.tos && <p className="mt-1 text-sm text-red-500">{errors.tos}</p>}
-          </div>
 
           <div className="flex justify-end gap-4 pt-6">
             <button

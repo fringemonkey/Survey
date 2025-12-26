@@ -32,6 +32,7 @@ function QuestSurvey() {
         preCu1QuestsRating: '',
         overallQuestRating: '',
         favoriteQuest: '',
+        favoriteQuestOther: '',
         questBugs: '',
       }
     } catch {
@@ -40,6 +41,7 @@ function QuestSurvey() {
         preCu1QuestsRating: '',
         overallQuestRating: '',
         favoriteQuest: '',
+        favoriteQuestOther: '',
         questBugs: '',
       }
     }
@@ -49,6 +51,9 @@ function QuestSurvey() {
   const [submitStatus, setSubmitStatus] = useState(null)
 
   useEffect(() => {
+    // Scroll to top on mount
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    
     if (!hasConsent()) {
       navigate('/survey')
       return
@@ -64,7 +69,12 @@ function QuestSurvey() {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => {
-      const updated = { ...prev, [name]: value }
+      const updated = {
+        ...prev,
+        [name]: value,
+        // Clear "Other" field when a non-Other option is selected
+        ...(name === 'favoriteQuest' && value !== 'other' ? { favoriteQuestOther: '' } : {}),
+      }
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated))
       return updated
     })
@@ -86,6 +96,10 @@ function QuestSurvey() {
     try {
       const submissionData = {
         ...formData,
+        // Use custom value if "other" is selected
+        favoriteQuest: formData.favoriteQuest === 'other' && formData.favoriteQuestOther 
+          ? formData.favoriteQuestOther 
+          : formData.favoriteQuest,
         surveyType: 'quest',
       }
       
@@ -193,6 +207,9 @@ function QuestSurvey() {
             type="select"
             value={formData.favoriteQuest}
             onChange={handleChange}
+            onOtherChange={handleChange}
+            otherValue={formData.favoriteQuestOther}
+            otherPlaceholder="Please specify your favorite quest..."
             placeholder="Select quest..."
             options={[
               { value: 'mother', label: 'Mother' },
@@ -201,6 +218,7 @@ function QuestSurvey() {
               { value: 'whispers_within', label: 'Whispers Within' },
               { value: 'smile_at_dark', label: 'Smile at Dark' },
               { value: 'none', label: 'No favorite' },
+              { value: 'other', label: 'Other' },
             ]}
           />
 

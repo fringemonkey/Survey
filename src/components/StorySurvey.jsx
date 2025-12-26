@@ -42,6 +42,9 @@ function StorySurvey() {
   const [submitStatus, setSubmitStatus] = useState(null)
 
   useEffect(() => {
+    // Scroll to top on mount
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    
     if (!hasConsent()) {
       navigate('/survey')
       return
