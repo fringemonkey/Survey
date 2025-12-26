@@ -28,6 +28,36 @@ export async function onRequestGet(context) {
       )
     }
     
+    // Test database connection and verify table exists
+    try {
+      const testQuery = await db.prepare('SELECT name FROM sqlite_master WHERE type="table" AND name="survey_responses"').first()
+      if (!testQuery) {
+        console.error('survey_responses table not found in database')
+        return new Response(
+          JSON.stringify({ 
+            error: 'Database Schema Error', 
+            message: 'Database table "survey_responses" not found. Please run the migration: wrangler d1 execute tlc-survey-db --file=./migrations/0001_init.sql'
+          }),
+          { 
+            status: 500,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          }
+        )
+      }
+    } catch (testError) {
+      console.error('Database connection test failed:', testError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Database Connection Error', 
+          message: `Unable to connect to database: ${testError.message}. Please verify the database binding is configured correctly.`
+        }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        }
+      )
+    }
+    
     if (type === 'overall') {
       // Get overall statistics (no personal data)
       const stats = await getOverallStats(db)
