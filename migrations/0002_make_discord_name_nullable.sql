@@ -9,8 +9,7 @@
 
 -- Note: This migration is safe to run even if discord_name is already nullable
 -- It will only affect databases that still have NOT NULL constraint
-
-BEGIN TRANSACTION;
+-- NOTE: D1 doesn't support BEGIN TRANSACTION/COMMIT, so this migration runs statements individually
 
 -- Create temporary table with updated schema
 CREATE TABLE IF NOT EXISTS survey_responses_new (
@@ -25,7 +24,6 @@ CREATE TABLE IF NOT EXISTS survey_responses_new (
   ram TEXT,
   tos INTEGER NOT NULL DEFAULT 0, -- checkbox: 0 = No, 1 = Yes
   response_id TEXT UNIQUE, -- Generated: TLC-CU1-{id}
-  storage TEXT, -- Added in 0003, but included here for compatibility if migration runs out of order
   
   -- Performance and Stability (Required)
   avg_fps_pre_cu1 INTEGER,
@@ -91,10 +89,9 @@ CREATE TABLE IF NOT EXISTS survey_responses_new (
 );
 
 -- Copy data from old table to new table (if old table exists)
--- Handle storage column: include it if it exists, otherwise use NULL
--- We check if storage column exists by attempting to select it with a fallback
+-- Explicitly list columns that exist in the original schema (without storage, which is added in 0003)
 INSERT INTO survey_responses_new (
-  id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id, storage,
+  id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id,
   avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
   common_bugs_experienced, crashes_per_session, quest_bugs_experienced, which_quest_poi,
   posted_about_issues_boat1, method_used_to_resolve_boat1, was_it_resolved_boat1, link_to_post_boat1,
@@ -109,10 +106,6 @@ INSERT INTO survey_responses_new (
 )
 SELECT 
   id, discord_name, age, cpu, gpu, playtime, ram, tos, response_id,
-  (SELECT storage FROM pragma_table_info('survey_responses') WHERE name = 'storage' LIMIT 1) IS NOT NULL 
-    THEN (SELECT storage FROM survey_responses WHERE id = outer.id)
-    ELSE NULL
-  END as storage,
   avg_fps_pre_cu1, avg_fps_post_cu1, pre_cu1_vs_post, overall_client_stability,
   common_bugs_experienced, crashes_per_session, quest_bugs_experienced, which_quest_poi,
   posted_about_issues_boat1, method_used_to_resolve_boat1, was_it_resolved_boat1, link_to_post_boat1,
@@ -124,7 +117,7 @@ SELECT
   the_warehouse_rating, whispers_within_rating, smile_at_dark_rating, story_engagement, overall_quest_story_rating,
   overall_score_post_cu1, open_feedback_space,
   submitted_at, synced_to_notion, synced_at
-FROM survey_responses as outer;
+FROM survey_responses;
 
 -- Drop old table
 DROP TABLE IF EXISTS survey_responses;
@@ -135,6 +128,4 @@ ALTER TABLE survey_responses_new RENAME TO survey_responses;
 -- Recreate indexes
 CREATE INDEX IF NOT EXISTS idx_synced_to_notion ON survey_responses(synced_to_notion, submitted_at);
 CREATE INDEX IF NOT EXISTS idx_response_id ON survey_responses(response_id);
-
-COMMIT;
 
