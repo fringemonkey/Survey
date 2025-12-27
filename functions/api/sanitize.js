@@ -1,40 +1,24 @@
 /**
  * Cloudflare Pages Function to sanitize staging data and sync to production
- * Called via cron trigger or manually via POST request
- * Protected endpoint - requires ADMIN_PASSWORD Bearer token
+ * Called manually via POST request from admin panel
+ * Also runs automatically after each submission completion
+ * Protected endpoint - requires authentication (Zero Trust or password)
  */
 
 import { filterContent, validateSurveyData, sanitizeSurveyData } from '../utils/sanitization.js'
-import { isAuthenticated, unauthorizedResponse, isAuthorizedCronRequest } from '../utils/auth.js'
+import { isAuthenticated, unauthorizedResponse } from '../utils/auth.js'
 import { getEnvironmentConfig } from '../utils/environment.js'
 
 export async function onRequestPost(context) {
   const { request, env } = context
   
-  // Check authentication (allow authorized cron triggers)
-  const isCronTrigger = isAuthorizedCronRequest(request, env)
-  if (!isCronTrigger) {
-    const authenticated = await isAuthenticated(request, env)
-    if (!authenticated) {
-      return unauthorizedResponse()
-    }
+  // Check authentication
+  const authenticated = await isAuthenticated(request, env)
+  if (!authenticated) {
+    return unauthorizedResponse()
   }
 
   return await processSanitization(request, env)
-}
-
-/**
- * Cron trigger handler (called hourly)
- */
-export async function onScheduled(event, env, ctx) {
-  // Cron triggers don't have a request object, so we detect environment from env vars
-  // Create a mock request for environment detection
-  const envName = env.ENVIRONMENT || 'production'
-  const mockUrl = envName === 'sandbox' || envName === 'preview' 
-    ? 'https://dev.gamesurvey.cocstlc.org' 
-    : 'https://gamesurvey.cocstlc.org'
-  const mockRequest = new Request(mockUrl)
-  ctx.waitUntil(processSanitization(mockRequest, env))
 }
 
 async function processSanitization(request, env) {

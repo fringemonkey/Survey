@@ -12,6 +12,9 @@ function AdminPage() {
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [autoRefresh, setAutoRefresh] = useState(true)
+  const [backupLoading, setBackupLoading] = useState(false)
+  const [sanitizeLoading, setSanitizeLoading] = useState(false)
+  const [operationMessage, setOperationMessage] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -141,6 +144,86 @@ function AdminPage() {
     loadSubmissions(newPage)
   }
 
+  const handleBackup = async () => {
+    setBackupLoading(true)
+    setOperationMessage(null)
+    try {
+      const response = await authenticatedFetch('/api/backup', {
+        method: 'POST'
+      })
+      
+      if (response.status === 401) {
+        await logout()
+        navigate('/admin/login')
+        return
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Backup failed')
+      }
+      
+      const data = await response.json()
+      setOperationMessage({
+        type: 'success',
+        text: `Backup completed successfully. Processed ${data.backups?.length || 0} database(s).`
+      })
+      
+      // Refresh data after backup
+      setTimeout(() => {
+        loadAllData()
+      }, 1000)
+    } catch (err) {
+      console.error('Backup error:', err)
+      setOperationMessage({
+        type: 'error',
+        text: err.message || 'Failed to create backup'
+      })
+    } finally {
+      setBackupLoading(false)
+    }
+  }
+
+  const handleSanitize = async () => {
+    setSanitizeLoading(true)
+    setOperationMessage(null)
+    try {
+      const response = await authenticatedFetch('/api/sanitize', {
+        method: 'POST'
+      })
+      
+      if (response.status === 401) {
+        await logout()
+        navigate('/admin/login')
+        return
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Sanitization failed')
+      }
+      
+      const data = await response.json()
+      setOperationMessage({
+        type: 'success',
+        text: `Sanitization completed. Processed: ${data.processed || 0}, Approved: ${data.approved || 0}, Rejected: ${data.rejected || 0}`
+      })
+      
+      // Refresh data after sanitization
+      setTimeout(() => {
+        loadAllData()
+      }, 1000)
+    } catch (err) {
+      console.error('Sanitization error:', err)
+      setOperationMessage({
+        type: 'error',
+        text: err.message || 'Failed to run sanitization'
+      })
+    } finally {
+      setSanitizeLoading(false)
+    }
+  }
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
     try {
@@ -210,6 +293,68 @@ function AdminPage() {
             <p className="text-red-500">{error}</p>
           </div>
         )}
+
+        {operationMessage && (
+          <div className={`mb-6 rounded-lg p-4 ${
+            operationMessage.type === 'success' 
+              ? 'bg-green-500/10 border border-green-500/20' 
+              : 'bg-red-500/10 border border-red-500/20'
+          }`}>
+            <p className={operationMessage.type === 'success' ? 'text-green-500' : 'text-red-500'}>
+              {operationMessage.text}
+            </p>
+          </div>
+        )}
+
+        {/* Manual Operations */}
+        <div className="bg-notion-surface rounded-lg p-6 mb-8">
+          <h2 className="text-2xl font-semibold text-notion-text mb-4">Manual Operations</h2>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={handleSanitize}
+              disabled={sanitizeLoading}
+              className="px-6 py-2 bg-notion-blue text-white rounded-lg hover:bg-notion-blue-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {sanitizeLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Running Sanitization...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Run Sanitization
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleBackup}
+              disabled={backupLoading}
+              className="px-6 py-2 bg-notion-green text-white rounded-lg hover:bg-notion-green-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {backupLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Creating Backup...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  Create Backup
+                </>
+              )}
+            </button>
+          </div>
+          <p className="text-sm text-notion-text-muted mt-4">
+            <strong>Sanitization:</strong> Processes pending records from staging database and moves approved records to production.
+            <br />
+            <strong>Backup:</strong> Creates backups of both staging and production databases.
+          </p>
+        </div>
 
         {/* Database Statistics */}
         {stats && (
