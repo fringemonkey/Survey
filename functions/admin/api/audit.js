@@ -23,7 +23,7 @@ export async function onRequestGet(context) {
   }
 }
 
-async function handleAuditLog(request, env, limit) {
+export async function handleAuditLog(request, env, limit) {
   const envConfig = getEnvironmentConfig(request, env)
   const stagingDb = envConfig.dbStaging || env.DB_STAGING || env.DB
   

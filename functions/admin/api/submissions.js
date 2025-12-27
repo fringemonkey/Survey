@@ -24,7 +24,7 @@ export async function onRequestGet(context) {
   }
 }
 
-async function handleSubmissions(request, env, page, limit) {
+export async function handleSubmissions(request, env, page, limit) {
   const envConfig = getEnvironmentConfig(request, env)
   const stagingDb = envConfig.dbStaging || env.DB_STAGING || env.DB
   

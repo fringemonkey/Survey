@@ -118,7 +118,7 @@ export async function onRequest(context) {
     return next()
   }
 
-  // For API routes, verify Zero Trust authentication
+  // For API routes, verify Zero Trust authentication and handle routing
   // Frontend routes are handled by Cloudflare Zero Trust at the edge
   const isApiRoute = url.pathname.startsWith('/admin/api/')
   
@@ -193,9 +193,65 @@ export async function onRequest(context) {
     const action = request.method === 'GET' ? 'read' : request.method.toLowerCase()
     const stagingDb = env.DB_STAGING || env.DB
     await logAdminAction(stagingDb, userInfo, action, url.pathname, ip)
+    
+    // Route to the specific API handler directly
+    // Cloudflare Pages Functions routing might not work with nested directories,
+    // so we handle routing here in the middleware
+    const path = url.pathname
+    try {
+      if (path === '/admin/api/stats' && request.method === 'GET') {
+        const { handleStats } = await import('./api/stats.js')
+        const response = await handleStats(request, env)
+        // Add security headers
+        const securityHeaders = getSecurityHeaders()
+        for (const [key, value] of Object.entries(securityHeaders)) {
+          response.headers.set(key, value)
+        }
+        return response
+      } else if (path === '/admin/api/submissions' && request.method === 'GET') {
+        const { handleSubmissions } = await import('./api/submissions.js')
+        const page = parseInt(url.searchParams.get('page') || '1')
+        const limit = parseInt(url.searchParams.get('limit') || '50')
+        const response = await handleSubmissions(request, env, page, limit)
+        const securityHeaders = getSecurityHeaders()
+        for (const [key, value] of Object.entries(securityHeaders)) {
+          response.headers.set(key, value)
+        }
+        return response
+      } else if (path === '/admin/api/status' && request.method === 'GET') {
+        const { handleStatus } = await import('./api/status.js')
+        const response = await handleStatus(request, env)
+        const securityHeaders = getSecurityHeaders()
+        for (const [key, value] of Object.entries(securityHeaders)) {
+          response.headers.set(key, value)
+        }
+        return response
+      } else if (path === '/admin/api/audit' && request.method === 'GET') {
+        const { handleAuditLog } = await import('./api/audit.js')
+        const limit = parseInt(url.searchParams.get('limit') || '50')
+        const response = await handleAuditLog(request, env, limit)
+        const securityHeaders = getSecurityHeaders()
+        for (const [key, value] of Object.entries(securityHeaders)) {
+          response.headers.set(key, value)
+        }
+        return response
+      }
+      
+      // If no route matched, return 404
+      return new Response(
+        JSON.stringify({ error: 'Not found', path }),
+        { status: 404, headers: { 'Content-Type': 'application/json', ...getSecurityHeaders() } }
+      )
+    } catch (error) {
+      console.error('Error routing to API handler:', error)
+      return new Response(
+        JSON.stringify({ error: 'Internal server error', message: error.message }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...getSecurityHeaders() } }
+      )
+    }
   }
   
-  // Continue to the actual handler (middleware passes through to API handlers or frontend)
+  // For frontend routes, just pass through (Cloudflare Zero Trust handles auth at edge)
   const response = await next()
   
   // Add security headers to response

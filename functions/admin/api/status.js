@@ -20,7 +20,7 @@ export async function onRequestGet(context) {
   }
 }
 
-async function handleStatus(request, env) {
+export async function handleStatus(request, env) {
   const envConfig = getEnvironmentConfig(request, env)
   const stagingDb = envConfig.dbStaging || env.DB_STAGING || env.DB
   const prodDb = envConfig.dbProd || env.DB_PROD

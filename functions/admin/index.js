@@ -6,6 +6,14 @@
  */
 
 export async function onRequest(context) {
+  const { request } = context
+  const url = new URL(request.url)
+  
+  // If this is an API route, don't handle it here - let the API handlers handle it
+  if (url.pathname.startsWith('/admin/api/')) {
+    return context.next()
+  }
+  
   // For non-API admin routes, just pass through to the frontend
   // The React app will handle routing
   return context.next()
