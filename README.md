@@ -74,7 +74,6 @@ npm run dev:full
 Γöé   Γö£ΓöÇΓöÇ components/   # UI components
 Γöé   Γö£ΓöÇΓöÇ services/     # API clients
 Γöé   ΓööΓöÇΓöÇ utils/        # Utilities and helpers
-ΓööΓöÇΓöÇ scripts/           # Deployment and maintenance scripts
 ```
 
 ## Documentation
