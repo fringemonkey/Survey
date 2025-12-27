@@ -9,7 +9,7 @@ pages_build_output_dir = "dist"
 # The /functions directory contains Pages Functions, not a Worker script
 
 # IMPORTANT: All bindings below are managed by wrangler when deploying with:
-#   npx wrangler pages deploy dist --project-name survey
+#   npx wrangler pages deploy dist --project-name tlc-survey
 # 
 # When bindings are managed by wrangler, they will show as "configured by wrangler"
 # in the Cloudflare Dashboard and cannot be changed via the UI.
@@ -23,7 +23,7 @@ pages_build_output_dir = "dist"
 # PRODUCTION ENVIRONMENT CONFIGURATION
 # ============================================================================
 # Default configuration applies to production environment
-# Deploy with: npx wrangler pages deploy dist --project-name survey
+# Deploy with: npx wrangler pages deploy dist --project-name tlc-survey
 
 # D1 Database bindings - Production
 [[d1_databases]]
@@ -59,8 +59,9 @@ ENVIRONMENT = "production"
 # SANDBOX/PREVIEW ENVIRONMENT CONFIGURATION
 # ============================================================================
 # Sandbox environment for dev.gamesurvey.cocstlc.org
-# Deploy with: npx wrangler pages deploy dist --project-name survey --branch dev
-# Or use custom environment: npx wrangler pages deploy dist --project-name survey --env preview
+# Deploy with: npx wrangler pages deploy dist --project-name tlc-survey --branch dev
+# Or use preview branch: npx wrangler pages deploy dist --project-name tlc-survey --branch preview
+# Note: The [env.preview] configuration is automatically applied to preview deployments
 
 [env.preview]
 # Sandbox D1 Database bindings
@@ -125,7 +126,9 @@ ENVIRONMENT = "sandbox"
 # 
 # Deploy with wrangler (bindings are automatically applied from this file):
 #   npm run build
-#   npx wrangler pages deploy dist --project-name survey
+#   npx wrangler pages deploy dist --project-name tlc-survey
 # 
-# Set secrets (only if using password auth during migration):
-#   npx wrangler pages secret put ADMIN_PASSWORD --project-name survey
+# For preview/sandbox environment:
+#   npm run deploy:preview
+#   or: npx wrangler pages deploy dist --project-name tlc-survey --branch preview
+# Note: Preview deployments automatically use [env.preview] configuration
