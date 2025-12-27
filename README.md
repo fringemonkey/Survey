@@ -7,7 +7,7 @@ A multi-branching survey platform built with React, Vite, and Cloudflare D1 for 
 - **[Documentation Wiki](https://github.com/TLC-Community-Survey/Survey/wiki)** - Complete setup guides, architecture details, and troubleshooting
 - **[Database Schema](https://github.com/TLC-Community-Survey/Survey/tree/main/migrations)** - View migration files and schema evolution
 - **[Source Code](https://github.com/TLC-Community-Survey/Survey)** - Browse the repository
-- **[Discord](https://discord.gg/baXkFBmF)
+- **[Discord](https://discord.gg/baXkFBmF)**
 ## Features
 
 - **Notion-like UI**: Clean, minimal design with Inter font, dark mode, and smooth animations
