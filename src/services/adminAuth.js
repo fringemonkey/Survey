@@ -1,124 +1,66 @@
 /**
  * Admin authentication service
- * Uses server-side session management - password never stored client-side
+ * Uses Cloudflare Zero Trust Access - authentication handled at edge level
+ * Cloudflare automatically adds CF-Access-JWT-Assertion header for authenticated requests
  */
 
 const API_BASE = '/api/admin'
-const SESSION_COOKIE_NAME = 'admin_session'
 
 /**
- * Check if admin session exists (client-side check only)
- * Server will verify the session token
+ * Check if user is authenticated via Cloudflare Zero Trust
+ * This is a client-side check - actual authentication happens at Cloudflare edge
  * @returns {boolean}
  */
 export function isAuthenticated() {
-  // Check if session cookie exists
-  const cookies = document.cookie.split(';')
-  return cookies.some(cookie => cookie.trim().startsWith(`${SESSION_COOKIE_NAME}=`))
-}
-
-/**
- * Get session token from cookie
- * @returns {string|null}
- */
-function getSessionToken() {
-  const cookies = document.cookie.split(';')
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split('=')
-    if (name === SESSION_COOKIE_NAME) {
-      return value
-    }
-  }
-  return null
+  // With Cloudflare Zero Trust, if the user can access the page,
+  // they are authenticated. The edge handles authentication before
+  // requests reach the application.
+  // We can't reliably check this client-side, so we assume if they
+  // can access the page, they're authenticated.
+  return true
 }
 
 /**
  * Make authenticated API request
- * Session token is sent via cookie automatically
+ * Cloudflare Zero Trust handles authentication at the edge
  * @param {string} endpoint - API endpoint (e.g., '/dashboard?type=overall' or '/admin/stats')
  * @param {RequestInit} options - Fetch options
  * @returns {Promise<Response>}
  */
 export async function authenticatedFetch(endpoint, options = {}) {
-  if (!isAuthenticated()) {
-    throw new Error('Not authenticated')
-  }
-
   // Determine base path based on endpoint
   const basePath = endpoint.startsWith('/admin') ? API_BASE : '/api'
   
-  // Session token is sent automatically via cookie
-  // Optionally also send as Bearer token for API clients
-  const sessionToken = getSessionToken()
+  // Cloudflare Zero Trust automatically adds CF-Access-JWT-Assertion header
+  // for authenticated requests. No need to manually add auth headers.
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
   }
   
-  if (sessionToken) {
-    headers['Authorization'] = `Bearer ${sessionToken}`
-  }
-  
-  return fetch(`${basePath}${endpoint}`, {
+  const response = await fetch(`${basePath}${endpoint}`, {
     ...options,
     credentials: 'include', // Include cookies
     headers
   })
-}
-
-/**
- * Login with password - creates server-side session
- * Password is never stored client-side
- * @param {string} password - Admin password
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export async function login(password) {
-  try {
-    const response = await fetch(`${API_BASE}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies
-      body: JSON.stringify({ password }),
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      return { success: false, error: data.error || 'Login failed' }
-    }
-
-    // Session cookie is set by server automatically
-    return { success: true }
-  } catch (error) {
-    console.error('Login error:', error)
-    return { success: false, error: 'Network error. Please try again.' }
+  
+  // If unauthorized, Cloudflare Zero Trust will have redirected before this
+  // But handle 401/403 just in case
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized - please authenticate via Cloudflare Zero Trust')
   }
+  
+  return response
 }
 
 /**
- * Logout - invalidates server-side session
+ * Logout - redirects to home page
+ * With Cloudflare Zero Trust, logout is handled by clearing the CF Access session
  * @returns {Promise<void>}
  */
 export async function logout() {
-  try {
-    await fetch(`${API_BASE}/logout`, {
-      method: 'POST',
-      credentials: 'include'
-    })
-  } catch (error) {
-    console.error('Logout error:', error)
-  }
-  
-  // Clear any client-side indicators (cookie cleared by server)
-}
-
-/**
- * Clear session (client-side only - server session already invalidated)
- */
-export function clearPassword() {
-  // Cookie is cleared by server on logout
-  // This is just for client-side state cleanup if needed
+  // Cloudflare Zero Trust sessions are managed by Cloudflare
+  // Redirecting to home page effectively logs out
+  window.location.href = '/'
 }
 

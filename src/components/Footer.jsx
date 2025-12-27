@@ -21,7 +21,7 @@ function Footer() {
             </Link>
             <span className="text-notion-bg-tertiary">•</span>
             <a
-              href="https://github.com/fringemonkey/Survey"
+              href="https://github.com/TLC-Community-Survey/Survey"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-notion-accent transition-colors"

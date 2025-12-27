@@ -337,18 +337,18 @@ function MethodologyPage() {
           <p className="text-notion-text-secondary leading-relaxed mb-4">
             <strong>Repository:</strong>{' '}
             <a 
-              href="https://github.com/fringemonkey/Survey" 
+              href="https://github.com/TLC-Community-Survey/Survey" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-notion-accent hover:underline"
             >
-              https://github.com/fringemonkey/Survey
+              https://github.com/TLC-Community-Survey/Survey
             </a>
           </p>
           <p className="text-notion-text-secondary leading-relaxed">
             <strong>Database Schema:</strong> See{' '}
             <a 
-              href="https://github.com/fringemonkey/Survey/tree/main/migrations" 
+              href="https://github.com/TLC-Community-Survey/Survey/tree/main/migrations" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-notion-accent hover:underline"

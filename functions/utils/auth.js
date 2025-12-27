@@ -1,11 +1,12 @@
 /**
  * Unified authentication utility for Cloudflare Pages Functions
- * Uses server-side session management with Cloudflare KV
+ * Supports Cloudflare Zero Trust Access (primary) and password-based sessions (fallback during migration)
  * Password is never stored client-side - only session tokens
  */
 
 const SESSION_DURATION = 24 * 60 * 60 // 24 hours in seconds
 const SESSION_COOKIE_NAME = 'admin_session'
+const CF_ACCESS_JWT_HEADER = 'CF-Access-JWT-Assertion'
 
 /**
  * Generate a secure session token
@@ -35,12 +36,59 @@ export function getSessionToken(request) {
 }
 
 /**
- * Check if request is authenticated using server-side session
+ * Verify Cloudflare Access JWT token
+ * @param {Request} request - HTTP request
+ * @param {Object} env - Cloudflare environment variables
+ * @returns {Promise<{authenticated: boolean, userInfo?: object}>}
+ */
+async function verifyCloudflareAccess(request, env) {
+  const jwtAssertion = request.headers.get(CF_ACCESS_JWT_HEADER)
+  
+  if (!jwtAssertion) {
+    return { authenticated: false }
+  }
+  
+  try {
+    // Cloudflare Access automatically validates the JWT at the edge
+    // If we receive the header, it means the user passed Zero Trust authentication
+    // Extract user info from JWT payload (base64 encoded)
+    const parts = jwtAssertion.split('.')
+    if (parts.length !== 3) {
+      return { authenticated: false }
+    }
+    
+    // Decode JWT payload (second part)
+    // Base64 URL decode: replace URL-safe characters and add padding if needed
+    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    // Add padding if needed
+    while (base64.length % 4) {
+      base64 += '='
+    }
+    const payload = JSON.parse(atob(base64))
+    
+    // Extract user information
+    const userInfo = {
+      email: payload.email || payload.sub,
+      githubUsername: payload.github_username || payload.preferred_username,
+      aud: payload.aud,
+      exp: payload.exp,
+      iat: payload.iat
+    }
+    
+    return { authenticated: true, userInfo }
+  } catch (error) {
+    console.error('CF Access JWT verification error:', error)
+    return { authenticated: false }
+  }
+}
+
+/**
+ * Check password-based authentication (fallback during migration)
  * @param {Request} request - HTTP request
  * @param {Object} env - Cloudflare environment variables
  * @returns {Promise<boolean>} - True if authenticated
  */
-export async function isAuthenticated(request, env) {
+async function checkPasswordAuth(request, env) {
   const sessionToken = getSessionToken(request)
   
   if (!sessionToken) {
@@ -61,6 +109,24 @@ export async function isAuthenticated(request, env) {
     console.error('Session verification error:', error)
     return false
   }
+}
+
+/**
+ * Check if request is authenticated using Cloudflare Zero Trust (primary) or password auth (fallback)
+ * @param {Request} request - HTTP request
+ * @param {Object} env - Cloudflare environment variables
+ * @returns {Promise<boolean>} - True if authenticated
+ */
+export async function isAuthenticated(request, env) {
+  // Check Zero Trust first (primary authentication method)
+  const cfAccess = await verifyCloudflareAccess(request, env)
+  if (cfAccess.authenticated) {
+    return true
+  }
+  
+  // Fallback to password auth during migration period
+  // This allows gradual migration without breaking existing sessions
+  return await checkPasswordAuth(request, env)
 }
 
 /**

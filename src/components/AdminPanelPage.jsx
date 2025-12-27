@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import Footer from './Footer'
 import GovernmentBanner from './GovernmentBanner'
 
@@ -127,7 +126,7 @@ function AdminPanelPage() {
           <ul className="list-disc list-inside text-notion-text-secondary space-y-2 ml-4 mb-4">
             <li>
               <a 
-                href="https://github.com/fringemonkey/Survey/tree/main/migrations" 
+                href="https://github.com/TLC-Community-Survey/Survey/tree/main/migrations" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-notion-accent hover:underline"
@@ -137,23 +136,13 @@ function AdminPanelPage() {
             </li>
             <li>
               <a 
-                href="https://github.com/fringemonkey/Survey/blob/main/migrations/0001_init.sql" 
+                href="https://github.com/TLC-Community-Survey/Survey/blob/main/migrations/0001_init.sql" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-notion-accent hover:underline"
               >
                 Initial schema (0001_init.sql)
               </a> - Base table structure
-            </li>
-            <li>
-              <a 
-                href="https://github.com/fringemonkey/Survey/blob/main/README.md#database-schema" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-notion-accent hover:underline"
-              >
-                Schema documentation (README.md)
-              </a> - Human-readable schema overview
             </li>
           </ul>
           <p className="text-notion-text-secondary leading-relaxed">
@@ -205,7 +194,7 @@ function AdminPanelPage() {
           <ul className="list-disc list-inside text-notion-text-secondary space-y-2 ml-4 mb-4">
             <li>
               <a 
-                href="https://github.com/fringemonkey/Survey/tree/main/functions/api/admin.js" 
+                href="https://github.com/TLC-Community-Survey/Survey/tree/main/functions/api/admin.js" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-notion-accent hover:underline"
@@ -215,7 +204,7 @@ function AdminPanelPage() {
             </li>
             <li>
               <a 
-                href="https://github.com/fringemonkey/Survey/tree/main/src/components/AdminPage.jsx" 
+                href="https://github.com/TLC-Community-Survey/Survey/tree/main/src/components/AdminPage.jsx" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-notion-accent hover:underline"
@@ -225,7 +214,7 @@ function AdminPanelPage() {
             </li>
             <li>
               <a 
-                href="https://github.com/fringemonkey/Survey/tree/main/functions/utils/auth.js" 
+                href="https://github.com/TLC-Community-Survey/Survey/tree/main/functions/utils/auth.js" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-notion-accent hover:underline"

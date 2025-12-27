@@ -92,13 +92,20 @@ RATE_LIMIT_PER_HOUR = "50"
 # Environment identifier
 ENVIRONMENT = "sandbox"
 
-# Required: Admin password for all protected API endpoints
-# ADMIN_PASSWORD = "" # Set via: wrangler pages secret put ADMIN_PASSWORD --project-name survey
+# Authentication: Cloudflare Zero Trust Access (primary) with password auth fallback (during migration)
 # 
-# Authentication uses server-side sessions stored in KV (RATE_LIMIT_KV or optional SESSION_KV)
-# Password is NEVER stored client-side - only session tokens in HttpOnly cookies
+# PRIMARY: Cloudflare Zero Trust Access with GitHub identity provider
+# - Admin panel and dev site protected via Cloudflare Access applications
+# - Authentication handled at edge level - no client-side password storage
+# - CF-Access-JWT-Assertion header automatically added for authenticated requests
 # 
-# All API endpoints except /api/submit are protected with server-side session authentication
+# FALLBACK (during migration): Password-based authentication
+# ADMIN_PASSWORD = "" # DEPRECATED - Set via: wrangler pages secret put ADMIN_PASSWORD --project-name survey
+# - Server-side sessions stored in KV (RATE_LIMIT_KV or optional SESSION_KV)
+# - Password is NEVER stored client-side - only session tokens in HttpOnly cookies
+# - Will be removed after Zero Trust migration is complete
+# 
+# All API endpoints except /api/submit are protected
 # Protected endpoints: /api/dashboard, /api/admin/*, /api/sanitize, /api/backup, /api/sync-to-notion
 # Cron triggers bypass authentication automatically
 

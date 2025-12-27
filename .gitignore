@@ -22,6 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.cursorrules
 
 # Environment variables
 .env
@@ -59,3 +60,6 @@ backups/
 
 # Parked term mode code
 ui/term/
+
+# Local documentation (LLM-generated docs - not for repo)
+docs/

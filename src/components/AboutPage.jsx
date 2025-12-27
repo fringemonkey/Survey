@@ -59,7 +59,7 @@ function AboutPage() {
           <p className="text-notion-text-secondary leading-relaxed">
             For technical questions about the survey platform or to report issues, please visit the{' '}
             <a 
-              href="https://github.com/fringemonkey/Survey" 
+              href="https://github.com/TLC-Community-Survey/Survey" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-notion-accent hover:underline"
