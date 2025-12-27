@@ -79,9 +79,21 @@ export async function fetchStats() {
 export async function fetchSubmissions(page = 1, limit = 50) {
   const response = await adminFetch(`/submissions?page=${page}&limit=${limit}`)
   if (!response.ok) {
-    throw new Error('Failed to fetch submissions')
+    const errorText = await response.text()
+    let errorMessage = 'Failed to fetch submissions'
+    try {
+      const errorData = JSON.parse(errorText)
+      errorMessage = errorData.message || errorData.error || errorMessage
+    } catch {
+      errorMessage = errorText || errorMessage
+    }
+    throw new Error(errorMessage)
   }
-  return await response.json()
+  const text = await response.text()
+  if (!text) {
+    throw new Error('Empty response from server')
+  }
+  return JSON.parse(text)
 }
 
 /**
