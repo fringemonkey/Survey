@@ -101,7 +101,7 @@ ENVIRONMENT = "sandbox"
 # - CF-Access-JWT-Assertion header automatically added for authenticated requests
 # 
 # FALLBACK (during migration): Password-based authentication
-# ADMIN_PASSWORD = "" # DEPRECATED - Set via: wrangler pages secret put ADMIN_PASSWORD --project-name survey
+# ADMIN_PASSWORD = "" # DEPRECATED - Set via: wrangler pages secret put ADMIN_PASSWORD --project-name tlc-survey
 # - Server-side sessions stored in KV (RATE_LIMIT_KV or optional SESSION_KV)
 # - Password is NEVER stored client-side - only session tokens in HttpOnly cookies
 # - Will be removed after Zero Trust migration is complete

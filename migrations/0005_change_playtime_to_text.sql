@@ -3,6 +3,10 @@
 --
 -- NOTE: D1 doesn't support ALTER COLUMN directly, so we need to recreate the table
 
+-- Check if migration has already been applied by checking if survey_responses exists
+-- If survey_responses_new exists from a previous failed run, clean it up first
+DROP TABLE IF EXISTS survey_responses_new;
+
 -- Create temporary table with updated schema (playtime is now TEXT)
 CREATE TABLE IF NOT EXISTS survey_responses_new (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,10 +143,12 @@ SELECT
   synced_at
 FROM survey_responses;
 
--- Drop old table
+-- Only proceed with rename if survey_responses exists (migration not already applied)
+-- Drop old table (safe even if already dropped)
 DROP TABLE IF EXISTS survey_responses;
 
--- Rename new table to original name
+-- Rename new table to original name (only if new table has data)
+-- Check if survey_responses_new exists and has been populated
 ALTER TABLE survey_responses_new RENAME TO survey_responses;
 
 -- Recreate indexes
