@@ -283,7 +283,8 @@ function MethodologyPage() {
               <li>All data transmission is encrypted via HTTPS</li>
               <li>Data is stored in Cloudflare's secure infrastructure</li>
               <li>No third-party tracking or analytics are used</li>
-              <li>No cookies are used for tracking (only for survey functionality)</li>
+              <li>Cookies are used only for survey functionality and admin authentication (no tracking)</li>
+              <li>Admin authentication uses server-side sessions—passwords are never stored client-side</li>
               <li>Source code is open-source and auditable</li>
             </ul>
           </div>
@@ -327,11 +328,13 @@ function MethodologyPage() {
             <li>Reviewing how data is collected and stored</li>
             <li>Verifying that no additional tracking or data collection occurs</li>
             <li>Understanding how edits and deduplication are handled</li>
+            <li>Examining the database schema (see <code>migrations/</code> folder)</li>
+            <li>Reviewing admin panel capabilities and data access limits</li>
           </ul>
           <p className="text-notion-text-secondary leading-relaxed mb-4">
             Reviewing the code is <strong>not required</strong> to participate in the survey.
           </p>
-          <p className="text-notion-text-secondary leading-relaxed">
+          <p className="text-notion-text-secondary leading-relaxed mb-4">
             <strong>Repository:</strong>{' '}
             <a 
               href="https://github.com/fringemonkey/Survey" 
@@ -341,6 +344,21 @@ function MethodologyPage() {
             >
               https://github.com/fringemonkey/Survey
             </a>
+          </p>
+          <p className="text-notion-text-secondary leading-relaxed">
+            <strong>Database Schema:</strong> See{' '}
+            <a 
+              href="https://github.com/fringemonkey/Survey/tree/main/migrations" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-notion-accent hover:underline"
+            >
+              migrations/
+            </a>{' '}
+            folder for complete schema definitions. For more information about system monitoring, see our{' '}
+            <Link to="/admin-panel" className="text-notion-accent hover:underline">
+              Admin Panel documentation
+            </Link>.
           </p>
         </section>
 

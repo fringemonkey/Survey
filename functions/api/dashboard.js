@@ -1,18 +1,29 @@
 /**
  * Cloudflare Pages Function to handle dashboard data requests
  * Returns aggregate statistics and user-specific data
+ * Protected endpoint - requires ADMIN_PASSWORD Bearer token
  */
+
+import { isAuthenticated, unauthorizedResponse } from '../utils/auth.js'
+import { getEnvironmentConfig } from '../utils/environment.js'
 
 export async function onRequestGet(context) {
   const { request, env } = context
+  
+  // Check authentication
+  const authenticated = await isAuthenticated(request, env)
+  if (!authenticated) {
+    return unauthorizedResponse()
+  }
   
   try {
     const url = new URL(request.url)
     const type = url.searchParams.get('type') || 'overall'
     const userDiscordName = url.searchParams.get('user') || null
     
-    // Use production database for dashboard (sanitized data only)
-    const db = env.DB_PROD || env.DB // Fallback to DB for backward compatibility
+    // Use environment-specific production database for dashboard (sanitized data only)
+    const envConfig = getEnvironmentConfig(request, env)
+    const db = envConfig.dbProd || envConfig.db // Fallback to DB for backward compatibility
     
     // Check if database is available
     if (!db) {

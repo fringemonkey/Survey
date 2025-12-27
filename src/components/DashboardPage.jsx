@@ -1,17 +1,36 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { isAuthenticated, logout } from '../services/adminAuth'
 import { getOverallStats } from '../services/dashboard'
 import ReportBuilder from './ReportBuilder'
 import Footer from './Footer'
 
 function DashboardPage() {
   const [loading, setLoading] = useState(true)
+  const [authenticated, setAuthenticated] = useState(false)
   const [stats, setStats] = useState(null)
   const [error, setError] = useState(null)
   const [showReportBuilder, setShowReportBuilder] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    loadDashboardData()
+    checkAuthentication()
   }, [])
+
+  useEffect(() => {
+    if (authenticated) {
+      loadDashboardData()
+    }
+  }, [authenticated])
+
+  const checkAuthentication = () => {
+    if (!isAuthenticated()) {
+      navigate('/admin/login')
+    } else {
+      setAuthenticated(true)
+    }
+    setLoading(false)
+  }
 
   const loadDashboardData = async () => {
     try {
@@ -22,6 +41,14 @@ function DashboardPage() {
       setStats(data)
     } catch (err) {
       console.error('Error loading dashboard:', err)
+      
+      // Handle authentication errors
+      if (err.message === 'Not authenticated' || err.message.includes('Unauthorized')) {
+        await logout()
+        navigate('/admin/login')
+        return
+      }
+      
       let errorMessage = 'Failed to load dashboard data. Please try again later.'
       
       // Provide more helpful error messages (sanitize to avoid showing stack traces)
@@ -50,6 +77,10 @@ function DashboardPage() {
         </div>
       </div>
     )
+  }
+
+  if (!authenticated) {
+    return null
   }
 
   if (error) {

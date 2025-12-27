@@ -1,36 +1,49 @@
 /**
  * Cloudflare Pages Function to sanitize staging data and sync to production
  * Called via cron trigger or manually via POST request
+ * Protected endpoint - requires ADMIN_PASSWORD Bearer token
  */
 
 import { filterContent, validateSurveyData, sanitizeSurveyData } from '../utils/sanitization.js'
+import { isAuthenticated, unauthorizedResponse } from '../utils/auth.js'
+import { getEnvironmentConfig } from '../utils/environment.js'
 
 export async function onRequestPost(context) {
   const { request, env } = context
   
-  // Optional: Require secret key for manual triggers
-  const authHeader = request.headers.get('Authorization')
-  const expectedSecret = env.BACKUP_SECRET || env.SANITIZE_SECRET
-  if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
-    )
+  // Check authentication (skip for cron triggers)
+  // Cron triggers don't include Authorization header, so we allow them through
+  // Manual triggers require authentication
+  const isCronTrigger = request.headers.get('CF-Scheduled') !== null
+  if (!isCronTrigger) {
+    const authenticated = await isAuthenticated(request, env)
+    if (!authenticated) {
+      return unauthorizedResponse()
+    }
   }
 
-  return await processSanitization(env)
+  return await processSanitization(request, env)
 }
 
 /**
  * Cron trigger handler (called hourly)
  */
 export async function onScheduled(event, env, ctx) {
-  ctx.waitUntil(processSanitization(env))
+  // Cron triggers don't have a request object, so we detect environment from env vars
+  // Create a mock request for environment detection
+  const envName = env.ENVIRONMENT || 'production'
+  const mockUrl = envName === 'sandbox' || envName === 'preview' 
+    ? 'https://dev.gamesurvey.cocstlc.org' 
+    : 'https://gamesurvey.cocstlc.org'
+  const mockRequest = new Request(mockUrl)
+  ctx.waitUntil(processSanitization(mockRequest, env))
 }
 
-async function processSanitization(env) {
-  const stagingDb = env.DB_STAGING || env.DB
-  const prodDb = env.DB_PROD
+async function processSanitization(request, env) {
+  // Use environment-specific databases
+  const envConfig = getEnvironmentConfig(request, env)
+  const stagingDb = envConfig.dbStaging
+  const prodDb = envConfig.dbProd
 
   if (!stagingDb) {
     console.error('Staging database not available')

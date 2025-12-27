@@ -1,13 +1,27 @@
 /**
  * Cloudflare Pages Function to sync D1 data to Notion
  * Can be called manually or via cron trigger
+ * Protected endpoint - requires ADMIN_PASSWORD Bearer token
  * 
  * NOTE: This function is OPTIONAL. The survey works perfectly fine without Notion.
  * Only use this if you want to sync data to Notion for reports/views.
  */
 
+import { isAuthenticated, unauthorizedResponse } from '../utils/auth.js'
+
 export async function onRequestPost(context) {
   const { request, env } = context
+  
+  // Check authentication (skip for cron triggers)
+  // Cron triggers don't include Authorization header, so we allow them through
+  // Manual triggers require authentication
+  const isCronTrigger = request.headers.get('CF-Scheduled') !== null
+  if (!isCronTrigger) {
+    const authenticated = await isAuthenticated(request, env)
+    if (!authenticated) {
+      return unauthorizedResponse()
+    }
+  }
   
   try {
     // Check if Notion is configured

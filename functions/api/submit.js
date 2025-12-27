@@ -1,40 +1,51 @@
 /**
  * Cloudflare Pages Function to handle survey submissions
- * Stores data in D1 staging database for sanitization
+ * Stores data in D1 staging database and triggers immediate sanitization
  */
 
-import { checkRateLimit, getClientIP } from '../utils/sanitization.js'
+import { checkRateLimit, getClientIP, filterContent, validateSurveyData, sanitizeSurveyData } from '../utils/sanitization.js'
+import { getEnvironmentConfig, getEnvironmentInfo } from '../utils/environment.js'
 
 export async function onRequestPost(context) {
   const { request, env } = context
   
   try {
-    // Rate limiting check
+    // Detect environment and get configuration
+    const envConfig = getEnvironmentConfig(request, env)
+    const envInfo = getEnvironmentInfo(request, env)
+    
+    // Log environment info for debugging (only in sandbox/preview)
+    if (envConfig.isSandbox) {
+      console.log('Sandbox environment detected:', envInfo)
+    }
+    
+    // Rate limiting check with environment-specific limits
     const clientIP = getClientIP(request)
-    const rateLimitPerHour = parseInt(env.RATE_LIMIT_PER_HOUR || '10')
-    const rateLimit = await checkRateLimit(env.RATE_LIMIT_KV, clientIP, rateLimitPerHour)
+    const rateLimit = await checkRateLimit(env.RATE_LIMIT_KV, clientIP, envConfig.rateLimitPerHour)
     
     if (!rateLimit.allowed) {
       return new Response(
         JSON.stringify({ 
           error: 'Rate limit exceeded',
           message: `Too many submissions. Please try again after ${new Date(rateLimit.resetAt).toISOString()}`,
-          resetAt: rateLimit.resetAt
+          resetAt: rateLimit.resetAt,
+          environment: envConfig.name
         }),
         { 
           status: 429,
           headers: { 
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            'Retry-After': Math.ceil((rateLimit.resetAt - Date.now()) / 1000).toString()
+            'Retry-After': Math.ceil((rateLimit.resetAt - Date.now()) / 1000).toString(),
+            'X-Environment': envConfig.name
           } 
         }
       )
     }
 
-    // Use staging database for all writes
-    const db = env.DB_STAGING || env.DB // Fallback to DB for backward compatibility
-    const prodDb = env.DB_PROD || null // Production DB for ID generation check
+    // Use environment-specific databases
+    const db = envConfig.dbStaging // Uses DB_STAGING from environment config
+    const prodDb = envConfig.dbProd // Uses DB_PROD from environment config
     
     const formData = await request.json()
     const surveyType = formData.surveyType || 'full'
@@ -61,10 +72,17 @@ export async function onRequestPost(context) {
         new Date().toISOString()
       ).run()
 
+      // Trigger immediate sanitization for this record (non-blocking)
+      const recordId = result.meta.last_row_id
+      sanitizeRecordImmediately(env, recordId).catch(err => {
+        console.error(`Failed to sanitize record ${recordId}:`, err)
+        // Don't fail the request if sanitization fails - it will be retried by cron
+      })
+
       return new Response(
         JSON.stringify({ 
           success: true, 
-          id: result.meta.last_row_id,
+          id: recordId,
           responseId: responseId,
           message: 'Submission received. Data will be processed and sanitized.',
           rateLimitRemaining: rateLimit.remaining
@@ -120,10 +138,17 @@ export async function onRequestPost(context) {
         new Date().toISOString()
       ).run()
 
+      // Trigger immediate sanitization for this record (non-blocking)
+      const recordId = result.meta.last_row_id
+      sanitizeRecordImmediately(env, recordId).catch(err => {
+        console.error(`Failed to sanitize record ${recordId}:`, err)
+        // Don't fail the request if sanitization fails - it will be retried by cron
+      })
+
       return new Response(
         JSON.stringify({ 
           success: true, 
-          id: result.meta.last_row_id,
+          id: recordId,
           responseId: responseId,
           message: 'Submission received. Data will be processed and sanitized.',
           rateLimitRemaining: rateLimit.remaining
@@ -168,10 +193,17 @@ export async function onRequestPost(context) {
         new Date().toISOString()
       ).run()
 
+      // Trigger immediate sanitization for this record (non-blocking)
+      const recordId = result.meta.last_row_id
+      sanitizeRecordImmediately(env, recordId).catch(err => {
+        console.error(`Failed to sanitize record ${recordId}:`, err)
+        // Don't fail the request if sanitization fails - it will be retried by cron
+      })
+
       return new Response(
         JSON.stringify({ 
           success: true, 
-          id: result.meta.last_row_id,
+          id: recordId,
           responseId: responseId,
           message: 'Submission received. Data will be processed and sanitized.',
           rateLimitRemaining: rateLimit.remaining
@@ -227,10 +259,17 @@ export async function onRequestPost(context) {
         new Date().toISOString()
       ).run()
 
+      // Trigger immediate sanitization for this record (non-blocking)
+      const recordId = result.meta.last_row_id
+      sanitizeRecordImmediately(env, recordId).catch(err => {
+        console.error(`Failed to sanitize record ${recordId}:`, err)
+        // Don't fail the request if sanitization fails - it will be retried by cron
+      })
+
       return new Response(
         JSON.stringify({ 
           success: true, 
-          id: result.meta.last_row_id,
+          id: recordId,
           responseId: responseId,
           message: 'Submission received. Data will be processed and sanitized.',
           rateLimitRemaining: rateLimit.remaining
@@ -276,10 +315,17 @@ export async function onRequestPost(context) {
         new Date().toISOString()
       ).run()
 
+      // Trigger immediate sanitization for this record (non-blocking)
+      const recordId = result.meta.last_row_id
+      sanitizeRecordImmediately(env, recordId).catch(err => {
+        console.error(`Failed to sanitize record ${recordId}:`, err)
+        // Don't fail the request if sanitization fails - it will be retried by cron
+      })
+
       return new Response(
         JSON.stringify({ 
           success: true, 
-          id: result.meta.last_row_id,
+          id: recordId,
           responseId: responseId,
           message: 'Submission received. Data will be processed and sanitized.',
           rateLimitRemaining: rateLimit.remaining
@@ -327,10 +373,17 @@ export async function onRequestPost(context) {
         new Date().toISOString()
       ).run()
 
+      // Trigger immediate sanitization for this record (non-blocking)
+      const recordId = result.meta.last_row_id
+      sanitizeRecordImmediately(env, recordId).catch(err => {
+        console.error(`Failed to sanitize record ${recordId}:`, err)
+        // Don't fail the request if sanitization fails - it will be retried by cron
+      })
+
       return new Response(
         JSON.stringify({ 
           success: true, 
-          id: result.meta.last_row_id,
+          id: recordId,
           responseId: responseId,
           message: 'Submission received. Data will be processed and sanitized.',
           rateLimitRemaining: rateLimit.remaining
@@ -504,17 +557,28 @@ export async function onRequestPost(context) {
       insertData.submitted_at
     ).run()
 
+    // Trigger immediate sanitization for this record (non-blocking)
+    const recordId = result.meta.last_row_id
+    sanitizeRecordImmediately(env, recordId).catch(err => {
+      console.error(`Failed to sanitize record ${recordId}:`, err)
+      // Don't fail the request if sanitization fails - it will be retried by cron
+    })
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        id: result.meta.last_row_id,
-        responseId: responseId
+        id: recordId,
+        responseId: responseId,
+        message: 'Submission received. Data will be processed and sanitized.',
+        rateLimitRemaining: rateLimit.remaining
       }),
       { 
         status: 200,
         headers: { 
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+          'X-RateLimit-Reset': rateLimit.resetAt.toString()
         } 
       }
     )
@@ -606,4 +670,129 @@ async function generateResponseId(db, prodDb = null) {
   
   // Start from 1 if no existing responses
   return 'TLC-LH-1'
+}
+
+/**
+ * Sanitize a single record immediately after submission
+ * This runs asynchronously and doesn't block the response
+ */
+async function sanitizeRecordImmediately(env, recordId) {
+  const stagingDb = env.DB_STAGING || env.DB
+  const prodDb = env.DB_PROD
+
+  if (!stagingDb || !prodDb) {
+    // If databases aren't configured, skip sanitization
+    return
+  }
+
+  try {
+    // Get the record we just inserted
+    const record = await stagingDb.prepare(
+      'SELECT * FROM survey_responses WHERE id = ?'
+    ).bind(recordId).first()
+
+    if (!record) {
+      return
+    }
+
+    // Validate data structure
+    const validation = await validateSurveyData(record)
+    if (!validation.valid) {
+      await markAsRejected(stagingDb, recordId, `Validation failed: ${validation.errors?.join(', ')}`)
+      return
+    }
+
+    // Sanitize text content
+    const sanitization = await sanitizeSurveyData(record)
+    const sanitizedRecord = sanitization.sanitized
+
+    // Check all text fields for malicious content
+    const textFields = [
+      'cpu', 'gpu', 'ram', 'storage', 'playtime', 'discord_name',
+      'quest_progress', 'open_feedback_space', 'bug_other_text',
+      'pre_cu1_vs_post', 'which_quest_poi', 'additional_data'
+    ]
+
+    let hasMaliciousContent = false
+    const maliciousReasons = []
+
+    for (const field of textFields) {
+      if (sanitizedRecord[field]) {
+        const contentCheck = await filterContent(String(sanitizedRecord[field]))
+        if (!contentCheck.safe) {
+          hasMaliciousContent = true
+          maliciousReasons.push(`${field}: ${contentCheck.reason}`)
+        }
+      }
+    }
+
+    if (hasMaliciousContent) {
+      await markAsRejected(stagingDb, recordId, `Malicious content detected: ${maliciousReasons.join(', ')}`)
+      return
+    }
+
+    // All checks passed - insert into production database
+    await insertToProduction(prodDb, sanitizedRecord)
+
+    // Mark as approved in staging
+    await stagingDb.prepare(
+      `UPDATE survey_responses 
+       SET sanitization_status = 'approved',
+           sanitized_at = ?,
+           rejected_reason = NULL
+       WHERE id = ?`
+    ).bind(new Date().toISOString(), recordId).run()
+
+  } catch (error) {
+    console.error(`Error sanitizing record ${recordId}:`, error)
+    // Increment attempt counter
+    const attempts = (record?.sanitization_attempts || 0) + 1
+    await stagingDb.prepare(
+      `UPDATE survey_responses 
+       SET sanitization_attempts = ? 
+       WHERE id = ?`
+    ).bind(attempts, recordId).run()
+
+    // Mark as rejected after too many attempts
+    if (attempts >= 3) {
+      await markAsRejected(stagingDb, recordId, `Processing failed after ${attempts} attempts: ${error.message}`)
+    }
+  }
+}
+
+async function markAsRejected(db, id, reason) {
+  await db.prepare(
+    `UPDATE survey_responses 
+     SET sanitization_status = 'rejected',
+         sanitized_at = ?,
+         rejected_reason = ?
+     WHERE id = ?`
+  ).bind(new Date().toISOString(), reason, id).run()
+}
+
+async function insertToProduction(db, record) {
+  // Build INSERT statement with all columns
+  const columns = [
+    'discord_name', 'age', 'cpu', 'gpu', 'ram', 'storage', 'playtime', 'tos', 'response_id',
+    'avg_fps_pre_cu1', 'avg_fps_post_cu1', 'pre_cu1_vs_post', 'overall_client_stability',
+    'common_bugs_experienced', 'crashes_per_session', 'quest_bugs_experienced', 'which_quest_poi',
+    'posted_about_issues_boat1', 'method_used_to_resolve_boat1', 'was_it_resolved_boat1', 'link_to_post_boat1',
+    'posted_about_issues_boat2', 'method_used_to_resolve_boat2', 'was_it_resolved_boat2', 'link_to_post_boat2',
+    'posted_about_issues_elevator', 'method_used_to_resolve_elevator', 'was_it_resolved_elevator', 'what_poi_elevator', 'link_to_post_elevator',
+    'posted_about_issues_sliding', 'was_it_resolved_sliding', 'picture_sliding', 'link_to_post_sliding',
+    'resolved_q_laz', 'additional_data',
+    'quest_progress', 'pre_cu1_quests_rating', 'mother_rating', 'the_one_before_me_rating',
+    'the_warehouse_rating', 'whispers_within_rating', 'smile_at_dark_rating', 'story_engagement', 'overall_quest_story_rating',
+    'overall_score_post_cu1', 'open_feedback_space',
+    'bug_none', 'bug_boat_stuck', 'bug_boat_sinking', 'bug_sliding_buildings',
+    'bug_elevator', 'bug_quest', 'bug_other', 'bug_other_text',
+    'submitted_at'
+  ]
+
+  const placeholders = columns.map(() => '?').join(', ')
+  const values = columns.map(col => record[col] !== undefined ? record[col] : null)
+
+  await db.prepare(
+    `INSERT INTO survey_responses (${columns.join(', ')}) VALUES (${placeholders})`
+  ).bind(...values).run()
 }

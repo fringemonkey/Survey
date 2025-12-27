@@ -53,22 +53,45 @@ function CookiePolicyPage() {
               <li>
                 <strong>Security:</strong> To help protect against unauthorized access to your survey data
               </li>
+              <li>
+                <strong>Admin Panel Authentication:</strong> If you access the admin panel, a secure HttpOnly session cookie 
+                is used for authentication. This cookie contains only a randomly generated session token—your password is 
+                <strong> never</strong> stored on your device. Sessions are managed entirely server-side using Cloudflare KV storage 
+                and expire after 24 hours.
+              </li>
             </ul>
             <p className="text-notion-text-secondary mt-4">
               <strong>Important:</strong> All data stored in localStorage remains on your device and is never 
               transmitted to our servers until you submit the completed form. You can clear this data at any time 
               through your browser settings.
             </p>
+            <p className="text-notion-text-secondary mt-4">
+              <strong>Security Note:</strong> Admin authentication uses server-side session management. Your password is 
+              verified once during login and never stored on your device. Only a secure session token is stored in an 
+              HttpOnly cookie, which cannot be accessed by JavaScript. All session validation happens server-side.
+            </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold mb-4">Cookie Duration</h2>
-            <p className="text-notion-text-secondary leading-relaxed">
-              Our session cookies expire automatically after <strong>20 minutes of inactivity</strong>. 
-              This means if you don't interact with the survey for 20 minutes, your session will end 
-              and you'll need to start over. This helps protect your privacy and ensures fresh sessions 
-              for each survey attempt.
+            <p className="text-notion-text-secondary leading-relaxed mb-4">
+              Cookie duration depends on the type:
             </p>
+            <ul className="list-disc list-inside space-y-2 text-notion-text-secondary ml-4 mb-4">
+              <li>
+                <strong>Survey Session Cookies:</strong> Expire automatically after <strong>20 minutes of inactivity</strong>. 
+                This means if you don't interact with the survey for 20 minutes, your session will end 
+                and you'll need to start over. This helps protect your privacy and ensures fresh sessions 
+                for each survey attempt.
+              </li>
+              <li>
+                <strong>Admin Panel Session Cookies:</strong> Expire after <strong>24 hours</strong> or when you log out. 
+                These cookies are HttpOnly (not accessible to JavaScript) and contain only a server-generated session token.
+              </li>
+              <li>
+                <strong>Cookie Consent:</strong> Stored for 1 year to remember your consent preference.
+              </li>
+            </ul>
           </section>
 
           <section>
@@ -118,7 +141,11 @@ function CookiePolicyPage() {
               <Link to="/methodology" className="text-notion-accent hover:underline">
                 Methodology & Privacy
               </Link>
-              {' '}page. If you have questions about our cookie usage, please contact us through 
+              {' '}page. For details about system monitoring and the admin panel, see our{' '}
+              <Link to="/admin-panel" className="text-notion-accent hover:underline">
+                Admin Panel documentation
+              </Link>
+              . If you have questions about our cookie usage, please contact us through 
               the appropriate channels.
             </p>
           </section>

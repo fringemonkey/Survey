@@ -1,6 +1,9 @@
 /**
  * Dashboard API service
+ * Requires authentication via adminAuth service
  */
+
+import { authenticatedFetch } from './adminAuth'
 
 const API_BASE = '/api'
 
@@ -10,12 +13,7 @@ const API_BASE = '/api'
  */
 export async function getOverallStats() {
   try {
-    const response = await fetch(`${API_BASE}/dashboard?type=overall`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await authenticatedFetch(`/dashboard?type=overall`)
 
     // Check if response is actually JSON first
     const contentType = response.headers.get('content-type')
@@ -46,12 +44,7 @@ export async function getOverallStats() {
  */
 export async function getUserDashboard(discordName) {
   try {
-    const response = await fetch(`${API_BASE}/dashboard?type=user&user=${encodeURIComponent(discordName)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await authenticatedFetch(`/dashboard?type=user&user=${encodeURIComponent(discordName)}`)
 
     // Check if response is actually JSON first
     const contentType = response.headers.get('content-type')
@@ -81,12 +74,7 @@ export async function getUserDashboard(discordName) {
  */
 export async function getAvailableFields() {
   try {
-    const response = await fetch(`${API_BASE}/dashboard?type=fields`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await authenticatedFetch(`/dashboard?type=fields`)
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -107,14 +95,8 @@ export async function getAvailableFields() {
  */
 export async function generateReport(field1, field2) {
   try {
-    const url = `${API_BASE}/dashboard?type=report&field1=${encodeURIComponent(field1)}&field2=${encodeURIComponent(field2)}`
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    const url = `/dashboard?type=report&field1=${encodeURIComponent(field1)}&field2=${encodeURIComponent(field2)}`
+    const response = await authenticatedFetch(url)
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)

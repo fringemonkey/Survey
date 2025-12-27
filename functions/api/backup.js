@@ -2,19 +2,23 @@
  * Cloudflare Pages Function to create database backups
  * Can be called manually via POST or via cron trigger
  * Exports both staging and production databases with timestamps
+ * Protected endpoint - requires ADMIN_PASSWORD Bearer token
  */
+
+import { isAuthenticated, unauthorizedResponse } from '../utils/auth.js'
 
 export async function onRequestPost(context) {
   const { request, env } = context
   
-  // Optional: Require secret key for manual triggers
-  const authHeader = request.headers.get('Authorization')
-  const expectedSecret = env.BACKUP_SECRET
-  if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
-    )
+  // Check authentication (skip for cron triggers)
+  // Cron triggers don't include Authorization header, so we allow them through
+  // Manual triggers require authentication
+  const isCronTrigger = request.headers.get('CF-Scheduled') !== null
+  if (!isCronTrigger) {
+    const authenticated = await isAuthenticated(request, env)
+    if (!authenticated) {
+      return unauthorizedResponse()
+    }
   }
 
   return await createBackup(env)
