@@ -79,11 +79,16 @@ export async function fetchStatus() {
 
 /**
  * Trigger backup operation
+ * Uses existing /api/backup endpoint (protected by Zero Trust)
  * @returns {Promise<object>}
  */
 export async function triggerBackup() {
-  const response = await adminFetch('/backup', {
-    method: 'POST'
+  const response = await fetch('/api/backup', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
   })
   if (!response.ok) {
     const errorData = await response.json()
@@ -94,11 +99,16 @@ export async function triggerBackup() {
 
 /**
  * Trigger sanitization operation
+ * Uses existing /api/sanitize endpoint (protected by Zero Trust)
  * @returns {Promise<object>}
  */
 export async function triggerSanitize() {
-  const response = await adminFetch('/sanitize', {
-    method: 'POST'
+  const response = await fetch('/api/sanitize', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
   })
   if (!response.ok) {
     const errorData = await response.json()

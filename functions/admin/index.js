@@ -5,7 +5,7 @@
  * All endpoints under /admin/api/*
  */
 
-import { isAdminAuthenticated, getAdminUserInfo } from '../../admin/utils/adminAuth.js'
+import { isAdminAuthenticated, getAdminUserInfo } from './utils/adminAuth.js'
 import { getEnvironmentConfig } from '../utils/environment.js'
 
 /**
@@ -74,17 +74,9 @@ export async function onRequestPost(context) {
     const url = new URL(request.url)
     const path = url.pathname
     
-    if (path === '/admin/api/backup') {
-      // Import backup handler from existing API
-      const { onRequestPost: backupHandler } = await import('../api/backup.js')
-      return await backupHandler(context)
-    }
-    
-    if (path === '/admin/api/sanitize') {
-      // Import sanitize handler from existing API
-      const { onRequestPost: sanitizeHandler } = await import('../api/sanitize.js')
-      return await sanitizeHandler(context)
-    }
+    // Note: Backup and sanitize operations are handled by existing /api/backup and /api/sanitize endpoints
+    // Those endpoints are also protected by Zero Trust and can be called directly from the admin panel
+    // No need to proxy them here
     
     return new Response(
       JSON.stringify({ error: 'Not found' }),

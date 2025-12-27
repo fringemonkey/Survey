@@ -4,8 +4,8 @@
  * Adds security headers and rate limiting
  */
 
-import { verifyAdminAccess, getAdminUserInfo } from '../../admin/utils/adminAuth.js'
-import { checkRateLimit, getClientIP } from '../utils/sanitization.js'
+import { verifyAdminAccess, getAdminUserInfo } from './utils/adminAuth.js'
+import { getClientIP } from '../utils/sanitization.js'
 
 /**
  * Security headers for admin routes

@@ -6,12 +6,13 @@ import AdminLogin from '../components/AdminLogin'
 /**
  * Admin routes
  * All routes under /admin/* are protected by Cloudflare Zero Trust at the edge
+ * When mounted at /admin/*, paths are relative
  */
 function AdminRoutes() {
   return (
     <Routes>
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route index element={<AdminDashboard />} />
+      <Route path="login" element={<AdminLogin />} />
     </Routes>
   )
 }

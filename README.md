@@ -67,13 +67,20 @@ npm run dev:full
 
 ```
 /
-Γö£ΓöÇΓöÇ functions/          # Cloudflare Pages Functions (API endpoints)
-Γö£ΓöÇΓöÇ migrations/        # D1 database migrations
-Γö£ΓöÇΓöÇ public/            # Static assets
-Γö£ΓöÇΓöÇ src/               # React application
-Γöé   Γö£ΓöÇΓöÇ components/   # UI components
-Γöé   Γö£ΓöÇΓöÇ services/     # API clients
-Γöé   ΓööΓöÇΓöÇ utils/        # Utilities and helpers
+├── functions/          # Cloudflare Pages Functions (API endpoints)
+│   ├── submit.js       # Public survey submission endpoint (/submit)
+│   ├── api/            # Protected API endpoints (/api/*)
+│   │   ├── admin.js    # Admin panel endpoints
+│   │   ├── dashboard.js
+│   │   ├── sanitize.js
+│   │   └── ...
+│   └── utils/          # Shared utilities for functions
+├── migrations/         # D1 database migrations
+├── public/             # Static assets
+└── src/                # React application
+    ├── components/     # UI components
+    ├── services/       # API clients
+    └── utils/          # Utilities and helpers
 ```
 
 ## Documentation

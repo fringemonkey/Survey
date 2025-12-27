@@ -13,9 +13,8 @@ import PersonalDataSurvey from './components/PersonalDataSurvey'
 import SurveyForm from './components/SurveyForm'
 import CookiePolicyPage from './components/CookiePolicyPage'
 import DashboardPage from './components/DashboardPage'
-import AdminPage from './components/AdminPage'
-import AdminLogin from './components/AdminLogin'
 import AdminPanelPage from './components/AdminPanelPage'
+import AdminRoutes from '../admin/routes/adminRoutes'
 import ScrollToTop from './components/ScrollToTop'
 
 function App() {
@@ -39,9 +38,9 @@ function App() {
           <Route path="/survey/form" element={<SurveyForm />} />
           <Route path="/cookie-policy" element={<CookiePolicyPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin-panel" element={<AdminPanelPage />} />
+          {/* Admin routes - protected by Cloudflare Zero Trust */}
+          <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
       </div>
     </Router>

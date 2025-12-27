@@ -93,22 +93,25 @@ RATE_LIMIT_PER_HOUR = "50"
 # Environment identifier
 ENVIRONMENT = "sandbox"
 
-# Authentication: Cloudflare Zero Trust Access (primary) with password auth fallback (during migration)
+# Authentication: Cloudflare Zero Trust Access with GitHub identity provider
 # 
-# PRIMARY: Cloudflare Zero Trust Access with GitHub identity provider
-# - Admin panel and dev site protected via Cloudflare Access applications
+# ADMIN MODULE: Zero Trust only (no password fallback)
+# - Admin panel located at /admin/* (separate module)
+# - Admin API endpoints at /admin/api/*
+# - Protected via Cloudflare Access with strict GitHub org/team validation
+# - Requires: TLC-Community-Survey organization, Admins team
 # - Authentication handled at edge level - no client-side password storage
 # - CF-Access-JWT-Assertion header automatically added for authenticated requests
+# - Includes security headers, rate limiting, and audit logging
 # 
-# FALLBACK (during migration): Password-based authentication
-# ADMIN_PASSWORD = "" # DEPRECATED - Set via: wrangler pages secret put ADMIN_PASSWORD --project-name tlc-survey
-# - Server-side sessions stored in KV (RATE_LIMIT_KV or optional SESSION_KV)
-# - Password is NEVER stored client-side - only session tokens in HttpOnly cookies
-# - Will be removed after Zero Trust migration is complete
+# OTHER ENDPOINTS: Zero Trust (primary) with password fallback (for backward compatibility)
+# - /api/dashboard, /api/sanitize, /api/backup, /api/sync-to-notion
+# - Password fallback may be removed in future versions
+# - ADMIN_PASSWORD = "" # Set via: wrangler pages secret put ADMIN_PASSWORD --project-name tlc-survey
 # 
 # All API endpoints are protected. /submit endpoint is public (moved out of /api to avoid Zero Trust protection)
-# Protected endpoints: /api/dashboard, /api/admin/*, /api/sanitize, /api/backup, /api/sync-to-notion
-# All protected endpoints require authentication (Zero Trust or password-based)
+# Protected endpoints: /api/dashboard, /api/sanitize, /api/backup, /api/sync-to-notion
+# Admin endpoints: /admin/* and /admin/api/* (Zero Trust only)
 
 # Optional: Notion integration (set via Cloudflare Dashboard secrets if using Notion)
 # NOTION_API_KEY = "" # Set via: wrangler secret put NOTION_API_KEY
