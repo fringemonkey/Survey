@@ -3,8 +3,8 @@
  * Stores data in D1 staging database and triggers immediate sanitization
  */
 
-import { checkRateLimit, getClientIP, filterContent, validateSurveyData, sanitizeSurveyData } from '../utils/sanitization.js'
-import { getEnvironmentConfig, getEnvironmentInfo } from '../utils/environment.js'
+import { checkRateLimit, getClientIP, filterContent, validateSurveyData, sanitizeSurveyData } from './utils/sanitization.js'
+import { getEnvironmentConfig, getEnvironmentInfo } from './utils/environment.js'
 
 export async function onRequestPost(context) {
   const { request, env } = context
