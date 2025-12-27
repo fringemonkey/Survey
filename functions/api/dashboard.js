@@ -6,6 +6,7 @@
 
 import { isAuthenticated, unauthorizedResponse } from '../utils/auth.js'
 import { getEnvironmentConfig } from '../utils/environment.js'
+import { getEnvironmentConfig } from '../utils/environment.js'
 
 export async function onRequestGet(context) {
   const { request, env } = context

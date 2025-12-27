@@ -74,7 +74,7 @@ export async function onRequestPost(context) {
 
       // Trigger immediate sanitization for this record (non-blocking)
       const recordId = result.meta.last_row_id
-      sanitizeRecordImmediately(env, recordId).catch(err => {
+      sanitizeRecordImmediately(env, envConfig, recordId).catch(err => {
         console.error(`Failed to sanitize record ${recordId}:`, err)
         // Don't fail the request if sanitization fails - can be retried manually via admin panel
       })
@@ -140,7 +140,7 @@ export async function onRequestPost(context) {
 
       // Trigger immediate sanitization for this record (non-blocking)
       const recordId = result.meta.last_row_id
-      sanitizeRecordImmediately(env, recordId).catch(err => {
+      sanitizeRecordImmediately(env, envConfig, recordId).catch(err => {
         console.error(`Failed to sanitize record ${recordId}:`, err)
         // Don't fail the request if sanitization fails - can be retried manually via admin panel
       })
@@ -195,7 +195,7 @@ export async function onRequestPost(context) {
 
       // Trigger immediate sanitization for this record (non-blocking)
       const recordId = result.meta.last_row_id
-      sanitizeRecordImmediately(env, recordId).catch(err => {
+      sanitizeRecordImmediately(env, envConfig, recordId).catch(err => {
         console.error(`Failed to sanitize record ${recordId}:`, err)
         // Don't fail the request if sanitization fails - can be retried manually via admin panel
       })
@@ -261,7 +261,7 @@ export async function onRequestPost(context) {
 
       // Trigger immediate sanitization for this record (non-blocking)
       const recordId = result.meta.last_row_id
-      sanitizeRecordImmediately(env, recordId).catch(err => {
+      sanitizeRecordImmediately(env, envConfig, recordId).catch(err => {
         console.error(`Failed to sanitize record ${recordId}:`, err)
         // Don't fail the request if sanitization fails - can be retried manually via admin panel
       })
@@ -317,7 +317,7 @@ export async function onRequestPost(context) {
 
       // Trigger immediate sanitization for this record (non-blocking)
       const recordId = result.meta.last_row_id
-      sanitizeRecordImmediately(env, recordId).catch(err => {
+      sanitizeRecordImmediately(env, envConfig, recordId).catch(err => {
         console.error(`Failed to sanitize record ${recordId}:`, err)
         // Don't fail the request if sanitization fails - can be retried manually via admin panel
       })
@@ -375,7 +375,7 @@ export async function onRequestPost(context) {
 
       // Trigger immediate sanitization for this record (non-blocking)
       const recordId = result.meta.last_row_id
-      sanitizeRecordImmediately(env, recordId).catch(err => {
+      sanitizeRecordImmediately(env, envConfig, recordId).catch(err => {
         console.error(`Failed to sanitize record ${recordId}:`, err)
         // Don't fail the request if sanitization fails - can be retried manually via admin panel
       })
@@ -559,9 +559,9 @@ export async function onRequestPost(context) {
 
     // Trigger immediate sanitization for this record (non-blocking)
     const recordId = result.meta.last_row_id
-    sanitizeRecordImmediately(env, recordId).catch(err => {
+    sanitizeRecordImmediately(env, envConfig, recordId).catch(err => {
       console.error(`Failed to sanitize record ${recordId}:`, err)
-      // Don't fail the request if sanitization fails - it will be retried by cron
+      // Don't fail the request if sanitization fails - can be retried manually via admin panel
     })
 
     return new Response(
@@ -679,12 +679,14 @@ async function generateResponseId(db, prodDb = null) {
  * Sanitize a single record immediately after submission
  * This runs asynchronously and doesn't block the response
  */
-async function sanitizeRecordImmediately(env, recordId) {
-  const stagingDb = env.DB_STAGING || env.DB
-  const prodDb = env.DB_PROD
+async function sanitizeRecordImmediately(env, envConfig, recordId) {
+  // Use environment-specific databases from config
+  const stagingDb = envConfig.dbStaging
+  const prodDb = envConfig.dbProd
 
   if (!stagingDb || !prodDb) {
     // If databases aren't configured, skip sanitization
+    console.warn(`Skipping sanitization for record ${recordId}: databases not configured (staging: ${!!stagingDb}, prod: ${!!prodDb})`)
     return
   }
 

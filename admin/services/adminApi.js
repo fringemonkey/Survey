@@ -36,6 +36,13 @@ export async function adminFetch(endpoint, options = {}) {
     throw new Error('Unauthorized - please authenticate via Cloudflare Zero Trust')
   }
   
+  // Check if response is empty or not JSON
+  const contentType = response.headers.get('content-type')
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text()
+    throw new Error(`Invalid response: ${text || 'Empty response'}`)
+  }
+  
   return response
 }
 
@@ -46,9 +53,21 @@ export async function adminFetch(endpoint, options = {}) {
 export async function fetchStats() {
   const response = await adminFetch('/stats')
   if (!response.ok) {
-    throw new Error('Failed to fetch stats')
+    const errorText = await response.text()
+    let errorMessage = 'Failed to fetch stats'
+    try {
+      const errorData = JSON.parse(errorText)
+      errorMessage = errorData.message || errorData.error || errorMessage
+    } catch {
+      errorMessage = errorText || errorMessage
+    }
+    throw new Error(errorMessage)
   }
-  return await response.json()
+  const text = await response.text()
+  if (!text) {
+    throw new Error('Empty response from server')
+  }
+  return JSON.parse(text)
 }
 
 /**

@@ -29,17 +29,22 @@ export async function onRequestGet(context) {
     
     // Handle different endpoints
     if (path === '/admin/api/stats') {
-      return await handleStats(env)
+      return await handleStats(request, env)
     }
     
     if (path === '/admin/api/submissions') {
       const page = parseInt(url.searchParams.get('page') || '1')
       const limit = parseInt(url.searchParams.get('limit') || '50')
-      return await handleSubmissions(env, page, limit)
+      return await handleSubmissions(request, env, page, limit)
     }
     
     if (path === '/admin/api/status') {
-      return await handleStatus(env)
+      return await handleStatus(request, env)
+    }
+    
+    if (path === '/admin/api/audit') {
+      const limit = parseInt(url.searchParams.get('limit') || '50')
+      return await handleAuditLog(request, env, limit)
     }
     
     return new Response(
@@ -94,8 +99,8 @@ export async function onRequestPost(context) {
 /**
  * Handle database statistics
  */
-async function handleStats(env) {
-  const envConfig = getEnvironmentConfig({ headers: new Headers() }, env)
+async function handleStats(request, env) {
+  const envConfig = getEnvironmentConfig(request, env)
   const stagingDb = envConfig.dbStaging || env.DB_STAGING || env.DB
   const prodDb = envConfig.dbProd || env.DB_PROD
   
@@ -156,8 +161,8 @@ async function handleStats(env) {
 /**
  * Handle submission log
  */
-async function handleSubmissions(env, page, limit) {
-  const envConfig = getEnvironmentConfig({ headers: new Headers() }, env)
+async function handleSubmissions(request, env, page, limit) {
+  const envConfig = getEnvironmentConfig(request, env)
   const stagingDb = envConfig.dbStaging || env.DB_STAGING || env.DB
   
   if (!stagingDb) {
@@ -212,8 +217,8 @@ async function handleSubmissions(env, page, limit) {
 /**
  * Handle system status
  */
-async function handleStatus(env) {
-  const envConfig = getEnvironmentConfig({ headers: new Headers() }, env)
+async function handleStatus(request, env) {
+  const envConfig = getEnvironmentConfig(request, env)
   const stagingDb = envConfig.dbStaging || env.DB_STAGING || env.DB
   const prodDb = envConfig.dbProd || env.DB_PROD
   const rateLimitKv = env.RATE_LIMIT_KV
@@ -292,5 +297,45 @@ async function handleStatus(env) {
     JSON.stringify(status),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   )
+}
+
+/**
+ * Handle audit log retrieval
+ */
+async function handleAuditLog(request, env, limit) {
+  const rateLimitKv = env.RATE_LIMIT_KV
+  
+  if (!rateLimitKv) {
+    return new Response(
+      JSON.stringify({ error: 'Audit logging not configured', logs: [] }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
+  
+  try {
+    // Get all audit log keys (this is a simplified approach - in production you might want pagination)
+    // Note: KV doesn't support listing keys directly, so we'll need to store a list of keys
+    // For now, we'll return a message that audit logs are stored but not easily queryable
+    // In a production system, you'd want to store audit logs in D1 or maintain an index
+    
+    // For now, return recent logs if we can find them
+    // This is a limitation - KV doesn't support listing keys
+    // We could store an index in KV or use D1 for audit logs
+    
+    return new Response(
+      JSON.stringify({ 
+        message: 'Audit logs are stored in KV. To view logs, check Cloudflare Dashboard → Workers & Pages → KV → View logs.',
+        note: 'For better audit log viewing, consider storing logs in D1 database',
+        logs: []
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Error fetching audit logs:', error)
+    return new Response(
+      JSON.stringify({ error: 'Failed to fetch audit logs', message: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
 }
 
