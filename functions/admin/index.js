@@ -303,30 +303,57 @@ async function handleStatus(request, env) {
  * Handle audit log retrieval
  */
 async function handleAuditLog(request, env, limit) {
-  const rateLimitKv = env.RATE_LIMIT_KV
+  const envConfig = getEnvironmentConfig(request, env)
+  const stagingDb = envConfig.dbStaging || env.DB_STAGING || env.DB
   
-  if (!rateLimitKv) {
+  if (!stagingDb) {
     return new Response(
-      JSON.stringify({ error: 'Audit logging not configured', logs: [] }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Database not configured', logs: [] }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
   
   try {
-    // Get all audit log keys (this is a simplified approach - in production you might want pagination)
-    // Note: KV doesn't support listing keys directly, so we'll need to store a list of keys
-    // For now, we'll return a message that audit logs are stored but not easily queryable
-    // In a production system, you'd want to store audit logs in D1 or maintain an index
+    // Check if audit log table exists
+    try {
+      await stagingDb.prepare('SELECT 1 FROM admin_audit_log LIMIT 1').first()
+    } catch (error) {
+      // Table doesn't exist yet - return empty logs with message
+      return new Response(
+        JSON.stringify({ 
+          logs: [],
+          message: 'Audit log table not found. Run migration 0008_add_admin_audit_log.sql to enable audit logging.',
+          note: 'Audit logs will be stored once the migration is applied'
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
     
-    // For now, return recent logs if we can find them
-    // This is a limitation - KV doesn't support listing keys
-    // We could store an index in KV or use D1 for audit logs
+    // Fetch recent audit logs
+    const logs = await stagingDb.prepare(
+      `SELECT id, timestamp, github_username, email, action, endpoint, ip_address, github_org, details, created_at
+       FROM admin_audit_log
+       ORDER BY timestamp DESC
+       LIMIT ?`
+    ).bind(limit).all()
+    
+    const formattedLogs = logs.results.map(log => ({
+      id: log.id,
+      timestamp: log.timestamp,
+      githubUsername: log.github_username,
+      email: log.email,
+      action: log.action,
+      endpoint: log.endpoint,
+      ipAddress: log.ip_address,
+      githubOrg: log.github_org,
+      details: log.details ? JSON.parse(log.details) : null,
+      createdAt: log.created_at
+    }))
     
     return new Response(
       JSON.stringify({ 
-        message: 'Audit logs are stored in KV. To view logs, check Cloudflare Dashboard → Workers & Pages → KV → View logs.',
-        note: 'For better audit log viewing, consider storing logs in D1 database',
-        logs: []
+        logs: formattedLogs,
+        total: formattedLogs.length
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     )

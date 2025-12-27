@@ -75,32 +75,31 @@ async function checkAdminRateLimit(kv, githubUsername, limitPerHour = 100) {
 
 /**
  * Log admin action for audit trail
- * @param {KVNamespace} kv - KV namespace (can be RATE_LIMIT_KV)
+ * Stores in D1 database for queryability
+ * @param {D1Database} db - D1 database (staging or prod)
  * @param {object} userInfo - User info from JWT
  * @param {string} action - Action performed
  * @param {string} endpoint - Endpoint accessed
  * @param {string} ip - Client IP
+ * @param {object} details - Additional details (optional)
  */
-async function logAdminAction(kv, userInfo, action, endpoint, ip) {
-  if (!kv || !userInfo) return
+async function logAdminAction(db, userInfo, action, endpoint, ip, details = null) {
+  if (!db || !userInfo) return
 
   try {
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      githubUsername: userInfo.githubUsername,
-      email: userInfo.email,
+    await db.prepare(
+      `INSERT INTO admin_audit_log (timestamp, github_username, email, action, endpoint, ip_address, github_org, details)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      new Date().toISOString(),
+      userInfo.githubUsername || 'unknown',
+      userInfo.email || null,
       action,
       endpoint,
-      ip,
-      githubOrg: userInfo.githubOrg
-    }
-
-    // Store in KV with timestamp as part of key for easy querying
-    const timestamp = Date.now()
-    const key = `admin_audit:${timestamp}:${userInfo.githubUsername}`
-    
-    // Store with 90 day expiration (audit logs retention)
-    await kv.put(key, JSON.stringify(logEntry), { expirationTtl: 90 * 24 * 60 * 60 })
+      ip || 'unknown',
+      userInfo.githubOrg || 'TLC-Community-Survey',
+      details ? JSON.stringify(details) : null
+    ).run()
   } catch (error) {
     console.error('Failed to log admin action:', error)
     // Don't fail the request if logging fails
@@ -155,9 +154,13 @@ export async function onRequest(context) {
     adminRateLimit
   )
 
-  if (!rateLimitResult.allowed) {
+    if (!rateLimitResult.allowed) {
     // Log rate limit exceeded
-    await logAdminAction(env.RATE_LIMIT_KV, userInfo, 'rate_limit_exceeded', url.pathname, ip)
+    const stagingDb = env.DB_STAGING || env.DB
+    await logAdminAction(stagingDb, userInfo, 'rate_limit_exceeded', url.pathname, ip, { 
+      limit: adminRateLimit,
+      resetAt: rateLimitResult.resetAt 
+    })
     
     return new Response(
       JSON.stringify({ 
@@ -176,9 +179,10 @@ export async function onRequest(context) {
     )
   }
 
-  // Log admin action
+  // Log admin action to D1 database
   const action = request.method === 'GET' ? 'read' : request.method.toLowerCase()
-  await logAdminAction(env.RATE_LIMIT_KV, userInfo, action, url.pathname, ip)
+  const stagingDb = env.DB_STAGING || env.DB
+  await logAdminAction(stagingDb, userInfo, action, url.pathname, ip)
 
   // Continue to the actual handler
   const response = await next()

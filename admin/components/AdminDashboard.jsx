@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { fetchStats, fetchSubmissions, fetchStatus, triggerBackup, triggerSanitize } from '../services/adminApi'
+import { fetchStats, fetchSubmissions, fetchStatus, triggerBackup, triggerSanitize, fetchAuditLogs } from '../services/adminApi'
 import AdminLayout from './AdminLayout'
 
 function AdminDashboard() {
@@ -7,6 +7,7 @@ function AdminDashboard() {
   const [stats, setStats] = useState(null)
   const [submissions, setSubmissions] = useState(null)
   const [status, setStatus] = useState(null)
+  const [auditLogs, setAuditLogs] = useState(null)
   const [error, setError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [autoRefresh, setAutoRefresh] = useState(true)
@@ -35,7 +36,8 @@ function AdminDashboard() {
       await Promise.all([
         loadStats(),
         loadSubmissions(currentPage),
-        loadStatus()
+        loadStatus(),
+        loadAuditLogs()
       ])
     } catch (err) {
       console.error('Error loading admin data:', err)
@@ -51,9 +53,11 @@ function AdminDashboard() {
       setStats(data)
     } catch (err) {
       console.error('Error loading stats:', err)
-      if (err.message.includes('Unauthorized')) {
+      if (err.message.includes('Unauthorized') || err.message.includes('Empty response')) {
         // Redirect will be handled by Cloudflare Zero Trust
-        window.location.href = '/admin'
+        setError(`Failed to load stats: ${err.message}`)
+      } else {
+        setError(`Failed to load stats: ${err.message}`)
       }
     }
   }
@@ -64,8 +68,10 @@ function AdminDashboard() {
       setSubmissions(data)
     } catch (err) {
       console.error('Error loading submissions:', err)
-      if (err.message.includes('Unauthorized')) {
-        window.location.href = '/admin'
+      if (err.message.includes('Unauthorized') || err.message.includes('Empty response')) {
+        setError(`Failed to load submissions: ${err.message}`)
+      } else {
+        setError(`Failed to load submissions: ${err.message}`)
       }
     }
   }
@@ -76,9 +82,21 @@ function AdminDashboard() {
       setStatus(data)
     } catch (err) {
       console.error('Error loading status:', err)
-      if (err.message.includes('Unauthorized')) {
-        window.location.href = '/admin'
+      if (err.message.includes('Unauthorized') || err.message.includes('Empty response')) {
+        setError(`Failed to load status: ${err.message}`)
+      } else {
+        setError(`Failed to load status: ${err.message}`)
       }
+    }
+  }
+
+  const loadAuditLogs = async () => {
+    try {
+      const data = await fetchAuditLogs(50)
+      setAuditLogs(data)
+    } catch (err) {
+      console.error('Error loading audit logs:', err)
+      // Don't show error for audit logs - they might not be configured yet
     }
   }
 
@@ -438,6 +456,44 @@ function AdminDashboard() {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Audit Log */}
+        {auditLogs && (
+          <div className="bg-notion-surface rounded-lg p-6 mb-8">
+            <h2 className="text-2xl font-semibold text-notion-text mb-4">Audit Log</h2>
+            {auditLogs.message && (
+              <p className="text-sm text-notion-text-muted mb-4">{auditLogs.message}</p>
+            )}
+            {auditLogs.logs && auditLogs.logs.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-notion-border">
+                      <th className="text-left py-2 px-4 text-sm font-medium text-notion-text-muted">Timestamp</th>
+                      <th className="text-left py-2 px-4 text-sm font-medium text-notion-text-muted">User</th>
+                      <th className="text-left py-2 px-4 text-sm font-medium text-notion-text-muted">Action</th>
+                      <th className="text-left py-2 px-4 text-sm font-medium text-notion-text-muted">Endpoint</th>
+                      <th className="text-left py-2 px-4 text-sm font-medium text-notion-text-muted">IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditLogs.logs.map((log) => (
+                      <tr key={log.id} className="border-b border-notion-border hover:bg-notion-bg">
+                        <td className="py-2 px-4 text-sm text-notion-text">{formatDate(log.timestamp)}</td>
+                        <td className="py-2 px-4 text-sm text-notion-text">{log.githubUsername || 'unknown'}</td>
+                        <td className="py-2 px-4 text-sm text-notion-text">{log.action}</td>
+                        <td className="py-2 px-4 text-sm text-notion-text font-mono text-xs">{log.endpoint}</td>
+                        <td className="py-2 px-4 text-sm text-notion-text-muted">{log.ipAddress || 'unknown'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-notion-text-muted">No audit logs available. Run migration 0008_add_admin_audit_log.sql to enable audit logging.</p>
             )}
           </div>
         )}

@@ -103,9 +103,46 @@ export async function fetchSubmissions(page = 1, limit = 50) {
 export async function fetchStatus() {
   const response = await adminFetch('/status')
   if (!response.ok) {
-    throw new Error('Failed to fetch status')
+    const errorText = await response.text()
+    let errorMessage = 'Failed to fetch status'
+    try {
+      const errorData = JSON.parse(errorText)
+      errorMessage = errorData.message || errorData.error || errorMessage
+    } catch {
+      errorMessage = errorText || errorMessage
+    }
+    throw new Error(errorMessage)
   }
-  return await response.json()
+  const text = await response.text()
+  if (!text) {
+    throw new Error('Empty response from server')
+  }
+  return JSON.parse(text)
+}
+
+/**
+ * Fetch audit logs
+ * @param {number} limit - Maximum number of logs to return
+ * @returns {Promise<object>}
+ */
+export async function fetchAuditLogs(limit = 50) {
+  const response = await adminFetch(`/audit?limit=${limit}`)
+  if (!response.ok) {
+    const errorText = await response.text()
+    let errorMessage = 'Failed to fetch audit logs'
+    try {
+      const errorData = JSON.parse(errorText)
+      errorMessage = errorData.message || errorData.error || errorMessage
+    } catch {
+      errorMessage = errorText || errorMessage
+    }
+    throw new Error(errorMessage)
+  }
+  const text = await response.text()
+  if (!text) {
+    return { logs: [], message: 'No audit logs available' }
+  }
+  return JSON.parse(text)
 }
 
 /**
@@ -122,10 +159,21 @@ export async function triggerBackup() {
     }
   })
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message || 'Backup failed')
+    const errorText = await response.text()
+    let errorMessage = 'Backup failed'
+    try {
+      const errorData = JSON.parse(errorText)
+      errorMessage = errorData.message || errorData.error || errorMessage
+    } catch {
+      errorMessage = errorText || errorMessage
+    }
+    throw new Error(errorMessage)
   }
-  return await response.json()
+  const text = await response.text()
+  if (!text) {
+    throw new Error('Empty response from server')
+  }
+  return JSON.parse(text)
 }
 
 /**
@@ -142,9 +190,19 @@ export async function triggerSanitize() {
     }
   })
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message || 'Sanitization failed')
+    const errorText = await response.text()
+    let errorMessage = 'Sanitization failed'
+    try {
+      const errorData = JSON.parse(errorText)
+      errorMessage = errorData.message || errorData.error || errorMessage
+    } catch {
+      errorMessage = errorText || errorMessage
+    }
+    throw new Error(errorMessage)
   }
-  return await response.json()
+  const text = await response.text()
+  if (!text) {
+    throw new Error('Empty response from server')
+  }
+  return JSON.parse(text)
 }
-

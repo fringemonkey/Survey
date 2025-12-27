@@ -15,8 +15,9 @@ A multi-branching survey platform built with React, Vite, and Cloudflare D1 for 
 - **Cloudflare D1 Storage**: Cost-effective SQLite database for storing survey responses
 - **Dual Database Architecture**: Staging database for raw submissions, production database for sanitized data
 - **Rate Limiting**: Built-in protection against spam and abuse
-- **Admin Panel**: Secure dashboard for viewing statistics and managing submissions
-- **Zero Trust Authentication**: GitHub-based authentication for admin access
+- **Admin Panel**: Secure dashboard for viewing statistics and managing submissions (separate module at `/admin/*`)
+- **Zero Trust Authentication**: GitHub-based authentication for admin access (TLC-Community-Survey/Admins team)
+- **Audit Logging**: All admin actions logged with user info and timestamps
 
 ## Architecture
 
@@ -67,10 +68,18 @@ npm run dev:full
 
 ```
 /
+├── admin/              # Admin module (separate, isolated)
+│   ├── components/      # Admin React components
+│   ├── routes/         # Admin route definitions
+│   ├── services/       # Admin API service layer
+│   └── utils/          # Admin utilities
 ├── functions/          # Cloudflare Pages Functions (API endpoints)
 │   ├── submit.js       # Public survey submission endpoint (/submit)
+│   ├── admin/          # Admin API endpoints (/admin/api/*)
+│   │   ├── _middleware.js  # Zero Trust middleware
+│   │   ├── index.js    # Admin API handlers
+│   │   └── utils/      # Admin server-side utilities
 │   ├── api/            # Protected API endpoints (/api/*)
-│   │   ├── admin.js    # Admin panel endpoints
 │   │   ├── dashboard.js
 │   │   ├── sanitize.js
 │   │   └── ...
